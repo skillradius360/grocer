@@ -11,6 +11,7 @@ import { OffersPage } from './pages/OffersPage'
 import { CustomersPage } from './pages/CustomersPage'
 import { SettingsPage } from './pages/SettingsPage'
 import { createSellerSession, loadSellerSession, saveSellerSession } from './lib/sellerStore'
+import { decimalOnly, digitsOnly, patterns, validateFieldsByRules } from './utils/validation'
 
 const initialForm = {
   phone: '',
@@ -20,6 +21,8 @@ const initialForm = {
   ownerName: '',
   pincode: '',
   address: '',
+  latitude: '',
+  longitude: '',
   gst: '',
 }
 
@@ -40,7 +43,7 @@ const steps = {
     eyebrow: 'Step 2 of 3',
     title: 'Pin the delivery location',
     copy: 'A precise map pin keeps serviceability, delivery timing, and local discovery clean.',
-    requiredFields: ['address', 'pincode'],
+    requiredFields: ['address', 'pincode', 'latitude', 'longitude'],
   },
   tax: {
     path: '/onboarding/tax',
@@ -51,6 +54,19 @@ const steps = {
     copy: 'GST is captured now so Firebase and backend validation can connect without reshaping the screen.',
     requiredFields: ['gst'],
   },
+}
+
+const validationRules = {
+  phone: { required: true, pattern: patterns.phone, message: 'Enter valid phone' },
+  otp: { required: true, pattern: /^[0-9]{4,6}$/, message: 'Enter 4-6 digit OTP' },
+  shopCode: { required: true, pattern: /^[A-Za-z0-9-]{4,24}$/, message: 'Invalid shop code' },
+  shopName: { required: true, pattern: patterns.shopName, message: 'Invalid shop name' },
+  ownerName: { required: true, pattern: patterns.name, message: 'Letters only' },
+  address: { required: true, pattern: /^.{8,180}$/, message: 'Add full address' },
+  pincode: { required: true, pattern: patterns.pincode, message: '6 digit pincode' },
+  latitude: { required: true, pattern: patterns.decimal, min: -90, max: 90, message: 'Invalid latitude' },
+  longitude: { required: true, pattern: patterns.decimal, min: -180, max: 180, message: 'Invalid longitude' },
+  gst: { required: true, pattern: patterns.gst, message: 'Invalid GST' },
 }
 
 function App() {
@@ -73,19 +89,26 @@ function App() {
   }, [theme])
 
   const updateField = (field) => (event) => {
-    setForm((current) => ({ ...current, [field]: event.target.value }))
+    const rawValue = event.target.value
+    const value = {
+      otp: digitsOnly(rawValue, 6),
+      pincode: digitsOnly(rawValue, 6),
+      latitude: decimalOnly(rawValue, 12),
+      longitude: decimalOnly(rawValue, 12),
+      gst: rawValue.toUpperCase().replace(/\s/g, '').slice(0, 15),
+    }[field] ?? rawValue
+
+    setForm((current) => ({ ...current, [field]: value }))
+    setErrors((current) => ({ ...current, [field]: '' }))
+  }
+
+  const updateFieldValue = (field, value) => {
+    setForm((current) => ({ ...current, [field]: value }))
     setErrors((current) => ({ ...current, [field]: '' }))
   }
 
   const validateFields = (fields) => {
-    const nextErrors = {}
-
-    fields.forEach((field) => {
-      if (!form[field].trim()) {
-        nextErrors[field] = 'Required'
-      }
-    })
-
+    const nextErrors = validateFieldsByRules(form, validationRules, fields)
     setErrors(nextErrors)
     return Object.keys(nextErrors).length === 0
   }
@@ -147,6 +170,7 @@ function App() {
                 step={steps.profile}
                 onBack={() => navigate(steps.profile.previous)}
                 onFieldChange={updateField}
+                onFieldValue={updateFieldValue}
                 onContinue={() => continueStep('profile')}
               />
             }
@@ -161,6 +185,7 @@ function App() {
                 step={steps.location}
                 onBack={() => navigate(steps.location.previous)}
                 onFieldChange={updateField}
+                onFieldValue={updateFieldValue}
                 onContinue={() => continueStep('location')}
               />
             }
@@ -175,6 +200,7 @@ function App() {
                 step={steps.tax}
                 onBack={() => navigate(steps.tax.previous)}
                 onFieldChange={updateField}
+                onFieldValue={updateFieldValue}
                 onContinue={() => continueStep('tax')}
               />
             }

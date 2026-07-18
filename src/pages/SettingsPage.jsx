@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 import { AppHeader } from '../components/AppHeader'
 import { MapPicker } from '../components/MapPicker'
+import { decimalOnly, digitsOnly, patterns, validateFieldsByRules } from '../utils/validation'
 
 const defaultSettings = {
   openingTime: '09:00',
@@ -29,6 +30,7 @@ export function SettingsPage({ sellerSession, setSellerSession, theme, onToggleT
   const [locationQuery, setLocationQuery] = useState('')
   const [locationResults, setLocationResults] = useState([])
   const [searchingLocation, setSearchingLocation] = useState(false)
+  const [fieldErrors, setFieldErrors] = useState({})
   const [shopInfo, setShopInfo] = useState({
     shopName: shop.shopName || 'Fresh Basket Mart',
     ownerName: shop.ownerName || '',
@@ -50,8 +52,22 @@ export function SettingsPage({ sellerSession, setSellerSession, theme, onToggleT
     return Math.round((fields.filter(Boolean).length / fields.length) * 100)
   }, [shopInfo])
 
-  const updateInfo = (field, value) => setShopInfo((current) => ({ ...current, [field]: value }))
-  const updateSetting = (field, value) => setShopSettings((current) => ({ ...current, [field]: value }))
+  const updateInfo = (field, value) => {
+    const nextValue = {
+      phone: value.replace(/[^\d+\s-]/g, '').slice(0, 16),
+      pincode: digitsOnly(value, 6),
+      latitude: decimalOnly(value, 12),
+      longitude: decimalOnly(value, 12),
+      gst: value.toUpperCase().replace(/\s/g, '').slice(0, 15),
+    }[field] ?? value
+    setShopInfo((current) => ({ ...current, [field]: nextValue }))
+    setFieldErrors((current) => ({ ...current, [field]: '' }))
+  }
+  const updateSetting = (field, value) => {
+    const nextValue = ['serviceRadius', 'preparationTime'].includes(field) ? digitsOnly(value, 3) : value
+    setShopSettings((current) => ({ ...current, [field]: nextValue }))
+    setFieldErrors((current) => ({ ...current, [field]: '' }))
+  }
   const hasCoordinates = shopInfo.latitude && shopInfo.longitude
 
   const locateShop = () => {
@@ -123,6 +139,30 @@ export function SettingsPage({ sellerSession, setSellerSession, theme, onToggleT
   }
 
   const saveChanges = () => {
+    const nextErrors = {
+      ...validateFieldsByRules(shopInfo, {
+        shopName: { required: true, pattern: patterns.shopName, message: 'Invalid shop name' },
+        ownerName: { required: true, pattern: patterns.name, message: 'Letters only' },
+        phone: { required: true, pattern: patterns.phone, message: 'Invalid phone' },
+        gst: { required: true, pattern: patterns.gst, message: 'Invalid GST' },
+        address: { required: true, pattern: /^.{8,180}$/, message: 'Add full address' },
+        pincode: { required: true, pattern: patterns.pincode, message: '6 digit pincode' },
+        latitude: { required: true, pattern: patterns.decimal, min: -90, max: 90, message: 'Invalid latitude' },
+        longitude: { required: true, pattern: patterns.decimal, min: -180, max: 180, message: 'Invalid longitude' },
+      }),
+      ...validateFieldsByRules(shopSettings, {
+        serviceRadius: { required: true, pattern: patterns.positiveNumber, min: 1, max: 50, message: '1-50 km' },
+        preparationTime: { required: true, pattern: patterns.positiveNumber, min: 1, max: 180, message: '1-180 min' },
+      }),
+    }
+
+    if (Object.keys(nextErrors).length) {
+      setFieldErrors(nextErrors)
+      setSavedMessage('Please fix highlighted fields.')
+      window.setTimeout(() => setSavedMessage(''), 2200)
+      return
+    }
+
     setSellerSession((current) => ({
       ...current,
       shop: {
@@ -174,14 +214,14 @@ export function SettingsPage({ sellerSession, setSellerSession, theme, onToggleT
 
           <FormPanel icon={UserRound} title="Shop info details" copy="Customer-facing identity, owner contact, and legal details.">
             <div className="grid gap-3 md:grid-cols-2">
-              <TextField label="Shop name" value={shopInfo.shopName} onChange={(value) => updateInfo('shopName', value)} placeholder="Fresh Basket Mart" />
-              <TextField label="Owner name" value={shopInfo.ownerName} onChange={(value) => updateInfo('ownerName', value)} placeholder="Owner full name" />
-              <TextField label="Phone number" value={shopInfo.phone} onChange={(value) => updateInfo('phone', value)} placeholder="+91 98765 43210" inputMode="tel" />
-              <TextField label="GST number" value={shopInfo.gst} onChange={(value) => updateInfo('gst', value)} placeholder="22AAAAA0000A1Z5" />
+              <TextField error={fieldErrors.shopName} label="Shop name" value={shopInfo.shopName} onChange={(value) => updateInfo('shopName', value)} placeholder="Fresh Basket Mart" />
+              <TextField error={fieldErrors.ownerName} label="Owner name" value={shopInfo.ownerName} onChange={(value) => updateInfo('ownerName', value)} placeholder="Owner full name" />
+              <TextField error={fieldErrors.phone} label="Phone number" value={shopInfo.phone} onChange={(value) => updateInfo('phone', value)} placeholder="+91 98765 43210" inputMode="tel" />
+              <TextField error={fieldErrors.gst} label="GST number" value={shopInfo.gst} onChange={(value) => updateInfo('gst', value)} placeholder="22AAAAA0000A1Z5" />
             </div>
-            <TextField label="Shop location / address" value={shopInfo.address} onChange={(value) => updateInfo('address', value)} placeholder="Street, area, landmark" multiline />
+            <TextField error={fieldErrors.address} label="Shop location / address" value={shopInfo.address} onChange={(value) => updateInfo('address', value)} placeholder="Street, area, landmark" multiline />
             <div className="grid gap-3 md:grid-cols-[0.7fr_1.3fr]">
-              <TextField label="Pincode" value={shopInfo.pincode} onChange={(value) => updateInfo('pincode', value)} placeholder="700001" inputMode="numeric" />
+              <TextField error={fieldErrors.pincode} label="Pincode" value={shopInfo.pincode} onChange={(value) => updateInfo('pincode', value)} placeholder="700001" inputMode="numeric" />
               <div className="rounded-[16px] border border-[#dde5da] bg-[#f8faf7] p-3">
                 <div className="mb-2 flex items-center gap-2 text-[#173f2a]">
                   <MapPin className="h-4 w-4" />
@@ -239,8 +279,8 @@ export function SettingsPage({ sellerSession, setSellerSession, theme, onToggleT
                 </div>
               )}
               <div className="grid gap-3 md:grid-cols-2">
-                <TextField label="Latitude" value={shopInfo.latitude} onChange={(value) => updateInfo('latitude', value)} placeholder="22.572645" inputMode="decimal" />
-                <TextField label="Longitude" value={shopInfo.longitude} onChange={(value) => updateInfo('longitude', value)} placeholder="88.363892" inputMode="decimal" />
+                <TextField error={fieldErrors.latitude} label="Latitude" value={shopInfo.latitude} onChange={(value) => updateInfo('latitude', value)} placeholder="22.572645" inputMode="decimal" />
+                <TextField error={fieldErrors.longitude} label="Longitude" value={shopInfo.longitude} onChange={(value) => updateInfo('longitude', value)} placeholder="88.363892" inputMode="decimal" />
               </div>
               {locationMessage && <p className="rounded-[14px] border border-[#f0c56e] bg-[#fff6e9] px-3 py-2 text-[11px] font-bold text-[#9a6500]">{locationMessage}</p>}
               {hasCoordinates ? (
@@ -275,8 +315,8 @@ export function SettingsPage({ sellerSession, setSellerSession, theme, onToggleT
               </SelectField>
             </div>
             <div className="grid gap-3 md:grid-cols-2">
-              <TextField label="Delivery radius km" value={shopSettings.serviceRadius} onChange={(value) => updateSetting('serviceRadius', value)} inputMode="numeric" placeholder="4" />
-              <TextField label="Preparation time min" value={shopSettings.preparationTime} onChange={(value) => updateSetting('preparationTime', value)} inputMode="numeric" placeholder="25" />
+              <TextField error={fieldErrors.serviceRadius} label="Delivery radius km" value={shopSettings.serviceRadius} onChange={(value) => updateSetting('serviceRadius', value)} inputMode="numeric" placeholder="4" />
+              <TextField error={fieldErrors.preparationTime} label="Preparation time min" value={shopSettings.preparationTime} onChange={(value) => updateSetting('preparationTime', value)} inputMode="numeric" placeholder="25" />
             </div>
           </FormPanel>
         </section>
@@ -344,13 +384,16 @@ function FormPanel({ icon: Icon, title, copy, children }) {
   )
 }
 
-function TextField({ label, value, onChange, placeholder, inputMode, multiline, type = 'text' }) {
+function TextField({ label, value, onChange, placeholder, inputMode, multiline, type = 'text', error }) {
   const Control = multiline ? 'textarea' : 'input'
   return (
     <label className="grid gap-1.5">
-      <span className="text-[11px] font-black uppercase tracking-[0.06em] text-[#647267]">{label}</span>
+      <span className="flex items-center justify-between gap-2 text-[11px] font-black uppercase tracking-[0.06em] text-[#647267]">
+        {label}
+        {error && <span className="normal-case tracking-normal text-[#b63a25]">{error}</span>}
+      </span>
       <Control
-        className="tap-lift min-h-12 rounded-[15px] border border-[#dde5da] bg-[#fbfcf8] px-3 py-3 text-[13px] font-bold text-[#111814] outline-none placeholder:text-[#9aa79d] focus:border-[#173f2a] focus:shadow-[0_0_0_4px_rgba(23,63,42,0.1)]"
+        className={`tap-lift min-h-12 rounded-[15px] border bg-[#fbfcf8] px-3 py-3 text-[13px] font-bold text-[#111814] outline-none placeholder:text-[#9aa79d] focus:border-[#173f2a] focus:shadow-[0_0_0_4px_rgba(23,63,42,0.1)] ${error ? 'border-[#d56b56] shadow-[0_0_0_3px_rgba(213,107,86,0.12)]' : 'border-[#dde5da]'}`}
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}

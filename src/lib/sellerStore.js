@@ -11,6 +11,8 @@ export const defaultSellerSession = {
     phone: '',
     address: '',
     pincode: '',
+    latitude: '',
+    longitude: '',
     gst: '',
     isLive: true,
     shopStatus: 'Open',
@@ -65,6 +67,18 @@ export function createSellerSession(form, authMode) {
       phone: form.phone,
       address: form.address,
       pincode: form.pincode,
+      latitude: form.latitude,
+      longitude: form.longitude,
+      location: {
+        address: form.address,
+        pincode: form.pincode,
+        geoPoint: {
+          latitude: Number(form.latitude || 0),
+          longitude: Number(form.longitude || 0),
+        },
+        provider: 'onboarding-map',
+        updatedAt: new Date().toISOString(),
+      },
       gst: form.gst,
     },
     dashboard: {

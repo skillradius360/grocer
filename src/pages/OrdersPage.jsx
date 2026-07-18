@@ -4,6 +4,7 @@ import { AppHeader } from '../components/AppHeader'
 import { Badge, IconButton, Panel, SectionTitle, StatCard } from '../components/dashboard/DashboardComponents'
 import { calculateOfferDiscount, getActiveOffers, getOfferBlockReason, offerAppliesToItem } from '../services/offerService'
 import { createBuyerOrder, getOrderCategories, getOrderInventory, getSellerOrders, saveSellerOrders, updateOrderStatus } from '../services/orderService'
+import { digitsOnly, patterns, validateFieldsByRules } from '../utils/validation'
 
 const tabs = ['New', 'Preparing', 'Ready', 'History']
 
@@ -54,6 +55,7 @@ export function OrdersPage({ sellerSession, theme, onToggleTheme }) {
   const [selectedOrder, setSelectedOrder] = useState(null)
   const [formOpen, setFormOpen] = useState(false)
   const [form, setForm] = useState(initialForm)
+  const [formErrors, setFormErrors] = useState({})
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(true)
 
@@ -123,8 +125,16 @@ export function OrdersPage({ sellerSession, theme, onToggleTheme }) {
     const selectedItem = inventory.find((item) => item.id === form.productId)
     const quantity = Number(form.quantity)
 
-    if (!form.buyerName.trim() || !form.buyerPhone.trim() || !form.buyerAddress.trim()) {
-      showMessage('Buyer name, phone, and address are required.')
+    const nextErrors = validateFieldsByRules(form, {
+      buyerName: { required: true, pattern: patterns.name, message: 'Letters only' },
+      buyerPhone: { required: true, pattern: patterns.phone, message: 'Invalid phone' },
+      buyerAddress: { required: true, pattern: /^.{6,180}$/, message: 'Add full address' },
+      quantity: { required: true, pattern: patterns.positiveNumber, min: 1, message: 'Invalid quantity' },
+    })
+
+    if (Object.keys(nextErrors).length) {
+      setFormErrors(nextErrors)
+      showMessage('Please fix highlighted fields.')
       return
     }
 
@@ -142,6 +152,7 @@ export function OrdersPage({ sellerSession, theme, onToggleTheme }) {
           : item
       )))
       setForm(initialForm)
+      setFormErrors({})
       setFormOpen(false)
       setActiveTab('New')
       showMessage(`${result.order.shortCode} created. Inventory updated.`)
@@ -252,10 +263,14 @@ export function OrdersPage({ sellerSession, theme, onToggleTheme }) {
         <BuyerOrderForm
           categories={categories}
           activeOffers={activeOffers}
+          errors={formErrors}
           form={form}
           inventory={inventory}
           onClose={() => setFormOpen(false)}
-          onChange={(patch) => setForm((current) => ({ ...current, ...patch }))}
+          onChange={(patch) => {
+            setForm((current) => ({ ...current, ...patch }))
+            setFormErrors((current) => ({ ...current, ...Object.keys(patch).reduce((cleared, key) => ({ ...cleared, [key]: '' }), {}) }))
+          }}
           onSubmit={submitBuyerOrder}
         />
       )}
@@ -461,7 +476,7 @@ function OrderDetail({ order, onClose, onConfirm, onReady, onPayment, onComplete
   )
 }
 
-function BuyerOrderForm({ activeOffers, categories, form, inventory, onChange, onClose, onSubmit }) {
+function BuyerOrderForm({ activeOffers, categories, errors, form, inventory, onChange, onClose, onSubmit }) {
   const selectedCategory = categories.find((category) => category.id === form.categoryId)
   const subcategories = selectedCategory?.subcategories || []
   const variantOptions = inventory.filter((item) => item.categoryId === form.categoryId && item.subcategory === form.subcategory)
@@ -523,9 +538,9 @@ function BuyerOrderForm({ activeOffers, categories, form, inventory, onChange, o
         </header>
 
         <div className="grid gap-3 p-4">
-          <FormInput label="Buyer name" value={form.buyerName} onChange={(value) => onChange({ buyerName: value })} placeholder="Customer name" />
-          <FormInput label="Phone number" value={form.buyerPhone} onChange={(value) => onChange({ buyerPhone: value })} placeholder="+91..." />
-          <FormInput label="Pickup / delivery address" value={form.buyerAddress} onChange={(value) => onChange({ buyerAddress: value })} placeholder="Flat, lane, landmark" />
+          <FormInput error={errors.buyerName} label="Buyer name" value={form.buyerName} onChange={(value) => onChange({ buyerName: value })} placeholder="Customer name" />
+          <FormInput error={errors.buyerPhone} label="Phone number" value={form.buyerPhone} onChange={(value) => onChange({ buyerPhone: digitsOnly(value, 10) })} placeholder="+91..." inputMode="tel" />
+          <FormInput error={errors.buyerAddress} label="Pickup / delivery address" value={form.buyerAddress} onChange={(value) => onChange({ buyerAddress: value })} placeholder="Flat, lane, landmark" />
 
           <div className="grid gap-3 rounded-[18px] border border-[#dde5da] bg-white p-3">
             <p className="text-[11px] font-black uppercase tracking-[0.06em] text-[#5b7567]">Product selection</p>
@@ -583,7 +598,7 @@ function BuyerOrderForm({ activeOffers, categories, form, inventory, onChange, o
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <FormInput label="Quantity" value={form.quantity} onChange={(value) => onChange({ quantity: Math.min(quantityLimit, Number(value || 1)) })} placeholder="1" type="number" min="1" max={quantityLimit} disabled={!selectedItem || selectedItem.quantity <= 0 || selectedItem.sellerStatus !== 'Active'} />
+            <FormInput error={errors.quantity} label="Quantity" value={form.quantity} onChange={(value) => onChange({ quantity: Math.min(quantityLimit, Number(digitsOnly(value, 4) || 1)) })} placeholder="1" type="number" min="1" max={quantityLimit} disabled={!selectedItem || selectedItem.quantity <= 0 || selectedItem.sellerStatus !== 'Active'} />
             <label className="grid gap-1.5">
               <span className="text-[11px] font-black uppercase tracking-[0.06em] text-[#5b7567]">Payment</span>
               <select className="tap-lift h-12 rounded-[15px] border border-[#dde5da] bg-white px-3 text-[13px] font-black text-[#111814] outline-none focus:border-[#173f2a] focus:shadow-[0_0_0_4px_rgba(23,63,42,0.1)]" value={form.paymentMethod} onChange={(event) => onChange({ paymentMethod: event.target.value })}>
@@ -646,12 +661,15 @@ function BuyerOrderForm({ activeOffers, categories, form, inventory, onChange, o
   )
 }
 
-function FormInput({ label, value, onChange, placeholder, type = 'text', ...props }) {
+function FormInput({ label, value, onChange, placeholder, type = 'text', error, ...props }) {
   return (
     <label className="grid gap-1.5">
-      <span className="text-[11px] font-black uppercase tracking-[0.06em] text-[#5b7567]">{label}</span>
+      <span className="flex items-center justify-between gap-2 text-[11px] font-black uppercase tracking-[0.06em] text-[#5b7567]">
+        {label}
+        {error && <span className="normal-case tracking-normal text-[#b63a25]">{error}</span>}
+      </span>
       <input
-        className="tap-lift h-12 rounded-[15px] border border-[#dde5da] bg-white px-3 text-[13px] font-black text-[#111814] outline-none placeholder:text-[#9aa79d] focus:border-[#173f2a] focus:shadow-[0_0_0_4px_rgba(23,63,42,0.1)]"
+        className={`tap-lift h-12 rounded-[15px] border bg-white px-3 text-[13px] font-black text-[#111814] outline-none placeholder:text-[#9aa79d] focus:border-[#173f2a] focus:shadow-[0_0_0_4px_rgba(23,63,42,0.1)] ${error ? 'border-[#d56b56] shadow-[0_0_0_3px_rgba(213,107,86,0.12)]' : 'border-[#dde5da]'}`}
         placeholder={placeholder}
         type={type}
         value={value}

@@ -1,6 +1,6 @@
 import { Icon } from './Icon'
 
-export function Field({ label, value, onChange, placeholder, inputMode, icon, error }) {
+export function Field({ label, value, onChange, placeholder, inputMode, icon, error, maxLength, pattern, type = 'text' }) {
   return (
     <label className="grid gap-2 text-[13px] font-bold text-[#334338]">
       <span className="flex items-center justify-between">
@@ -21,6 +21,9 @@ export function Field({ label, value, onChange, placeholder, inputMode, icon, er
           onChange={onChange}
           placeholder={placeholder}
           inputMode={inputMode}
+          maxLength={maxLength}
+          pattern={pattern}
+          type={type}
         />
       </div>
     </label>

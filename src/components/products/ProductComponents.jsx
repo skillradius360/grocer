@@ -7,6 +7,7 @@ import {
   Upload,
   X,
 } from 'lucide-react'
+import { decimalOnly, validateFieldsByRules, patterns } from '../../utils/validation'
 
 export function StatusBadge({ status }) {
   const styles = {
@@ -204,11 +205,43 @@ export function ProductForm({ categories, masterProducts, mode, product, onClose
     maximumOrderQuantity: product?.maximumOrderQuantity || '',
     availability: product?.availability || 'Available',
   })
+  const [errors, setErrors] = useState({})
 
   const category = categories.find((item) => item.id === form.categoryId)
   const categoryMasters = masterProducts.filter((item) => item.categoryId === form.categoryId)
 
-  const update = (field, value) => setForm((current) => ({ ...current, [field]: value }))
+  const update = (field, value) => {
+    const numericFields = ['sellingPrice', 'mrp', 'inventoryQuantity', 'minimumOrderQuantity', 'maximumOrderQuantity']
+    const nextValue = numericFields.includes(field) ? decimalOnly(value, 8) : value
+    setForm((current) => ({ ...current, [field]: nextValue }))
+    setErrors((current) => ({ ...current, [field]: '' }))
+  }
+
+  const saveForm = () => {
+    const rules = {
+      sellingPrice: { required: true, pattern: patterns.positiveNumber, min: 0.01, message: 'Enter valid price' },
+      inventoryQuantity: { required: true, pattern: patterns.positiveNumber, min: 0, message: 'Enter stock' },
+      inventoryUnit: { required: true, pattern: /^[A-Za-z][A-Za-z\s/.-]{0,19}$/, message: 'Letters only' },
+      name: { required: !form.masterProductId && mode !== 'edit', pattern: /^.{2,80}$/, message: 'Required' },
+      mrp: { required: form.type === 'Packed', pattern: patterns.positiveNumber, min: 0.01, message: 'Enter valid MRP' },
+      sku: { required: form.type === 'Packed', pattern: /^[A-Za-z0-9-]{2,32}$/, message: 'Invalid SKU' },
+      priceUnit: { required: form.type === 'Loose', pattern: /^[A-Za-z][A-Za-z\s/.-]{0,19}$/, message: 'Letters only' },
+      minimumOrderQuantity: { required: form.type === 'Loose', pattern: patterns.positiveNumber, min: 0.01, message: 'Required' },
+      maximumOrderQuantity: { required: form.type === 'Loose', pattern: patterns.positiveNumber, min: 0.01, message: 'Required' },
+    }
+    const nextErrors = validateFieldsByRules(form, rules)
+
+    if (form.type === 'Packed' && Number(form.mrp) < Number(form.sellingPrice)) {
+      nextErrors.mrp = 'MRP must be >= price'
+    }
+    if (form.type === 'Loose' && Number(form.maximumOrderQuantity) < Number(form.minimumOrderQuantity)) {
+      nextErrors.maximumOrderQuantity = 'Must be >= minimum'
+    }
+
+    setErrors(nextErrors)
+    if (Object.keys(nextErrors).length) return
+    onSave(form)
+  }
 
   return (
     <div className="fixed inset-0 z-30 grid place-items-end bg-[#11181466] sm:place-items-center">
@@ -250,7 +283,7 @@ export function ProductForm({ categories, masterProducts, mode, product, onClose
           {!form.masterProductId && mode !== 'edit' && (
             <FormSection title="Product identity" copy="Name and describe the item customers will see.">
               <div className="grid gap-3 md:grid-cols-2">
-                <Input label="Name" value={form.name} onChange={(value) => update('name', value)} placeholder="Basmati Rice 1kg" />
+                <Input error={errors.name} label="Name" value={form.name} onChange={(value) => update('name', value)} placeholder="Basmati Rice 1kg" />
                 <Input label="Brand optional" value={form.brand} onChange={(value) => update('brand', value)} placeholder="Daily Gold" />
               </div>
               <Input label="Description" value={form.description} onChange={(value) => update('description', value)} placeholder="Short product details" />
@@ -268,17 +301,17 @@ export function ProductForm({ categories, masterProducts, mode, product, onClose
               ))}
             </div>
             <div className="grid gap-3 md:grid-cols-3">
-              <Input label="Selling Price" value={form.sellingPrice} onChange={(value) => update('sellingPrice', value)} placeholder="110" inputMode="numeric" />
+              <Input error={errors.sellingPrice} label="Selling Price" value={form.sellingPrice} onChange={(value) => update('sellingPrice', value)} placeholder="110" inputMode="decimal" />
               {form.type === 'Packed' ? (
                 <>
-                  <Input label="MRP" value={form.mrp} onChange={(value) => update('mrp', value)} placeholder="140" inputMode="numeric" />
-                  <Input label="SKU" value={form.sku} onChange={(value) => update('sku', value)} placeholder="SKU-001" />
+                  <Input error={errors.mrp} label="MRP" value={form.mrp} onChange={(value) => update('mrp', value)} placeholder="140" inputMode="decimal" />
+                  <Input error={errors.sku} label="SKU" value={form.sku} onChange={(value) => update('sku', value.toUpperCase())} placeholder="SKU-001" />
                 </>
               ) : (
                 <>
-                  <Input label="Price Unit" value={form.priceUnit} onChange={(value) => update('priceUnit', value)} placeholder="kg" />
-                  <Input label="Minimum Qty" value={form.minimumOrderQuantity} onChange={(value) => update('minimumOrderQuantity', value)} placeholder="1" inputMode="numeric" />
-                  <Input label="Maximum Qty" value={form.maximumOrderQuantity} onChange={(value) => update('maximumOrderQuantity', value)} placeholder="25" inputMode="numeric" />
+                  <Input error={errors.priceUnit} label="Price Unit" value={form.priceUnit} onChange={(value) => update('priceUnit', value)} placeholder="kg" />
+                  <Input error={errors.minimumOrderQuantity} label="Minimum Qty" value={form.minimumOrderQuantity} onChange={(value) => update('minimumOrderQuantity', value)} placeholder="1" inputMode="decimal" />
+                  <Input error={errors.maximumOrderQuantity} label="Maximum Qty" value={form.maximumOrderQuantity} onChange={(value) => update('maximumOrderQuantity', value)} placeholder="25" inputMode="decimal" />
                 </>
               )}
             </div>
@@ -286,8 +319,8 @@ export function ProductForm({ categories, masterProducts, mode, product, onClose
 
           <FormSection title="Inventory" copy="Keep seller stock and units ready for orders.">
             <div className="grid gap-3 md:grid-cols-2">
-              <Input label="Inventory Quantity" value={form.inventoryQuantity} onChange={(value) => update('inventoryQuantity', value)} placeholder="18" inputMode="numeric" />
-              <Input label="Inventory Unit" value={form.inventoryUnit} onChange={(value) => update('inventoryUnit', value)} placeholder="kg / Piece" />
+              <Input error={errors.inventoryQuantity} label="Inventory Quantity" value={form.inventoryQuantity} onChange={(value) => update('inventoryQuantity', value)} placeholder="18" inputMode="decimal" />
+              <Input error={errors.inventoryUnit} label="Inventory Unit" value={form.inventoryUnit} onChange={(value) => update('inventoryUnit', value)} placeholder="kg / Piece" />
             </div>
           </FormSection>
         </div>
@@ -296,7 +329,7 @@ export function ProductForm({ categories, masterProducts, mode, product, onClose
           <button className="tap-lift rounded-[16px] border border-[#dde5da] bg-white py-3 text-[13px] font-black active:bg-[#f8faf7]" type="button" onClick={onClose}>
             Cancel
           </button>
-          <button className="tap-lift min-h-12 rounded-[16px] bg-[#173f2a] text-[13px] font-black text-white active:bg-[#08783c]" type="button" onClick={() => onSave(form)}>
+          <button className="tap-lift min-h-12 rounded-[16px] bg-[#173f2a] text-[13px] font-black text-white active:bg-[#08783c]" type="button" onClick={saveForm}>
             Save Product
           </button>
         </footer>
@@ -317,20 +350,23 @@ function FormSection({ title, copy, children }) {
   )
 }
 
-function FieldLike({ label, children }) {
+function FieldLike({ label, children, error }) {
   return (
     <label className="grid gap-1.5">
-      <span className="text-[11px] font-black uppercase tracking-[0.06em] text-[#647267]">{label}</span>
+      <span className="flex items-center justify-between gap-2 text-[11px] font-black uppercase tracking-[0.06em] text-[#647267]">
+        {label}
+        {error && <span className="normal-case tracking-normal text-[#b63a25]">{error}</span>}
+      </span>
       {children}
     </label>
   )
 }
 
-function Input({ label, value, onChange, placeholder, inputMode }) {
+function Input({ label, value, onChange, placeholder, inputMode, error }) {
   return (
-    <FieldLike label={label}>
+    <FieldLike label={label} error={error}>
       <input
-        className="tap-lift h-12 rounded-[15px] border border-[#dde5da] bg-[#fbfcf8] px-3 text-[13px] font-bold text-[#111814] outline-none placeholder:text-[#9aa79d] focus:border-[#173f2a] focus:shadow-[0_0_0_4px_rgba(23,63,42,0.1)]"
+        className={`tap-lift h-12 rounded-[15px] border bg-[#fbfcf8] px-3 text-[13px] font-bold text-[#111814] outline-none placeholder:text-[#9aa79d] focus:border-[#173f2a] focus:shadow-[0_0_0_4px_rgba(23,63,42,0.1)] ${error ? 'border-[#d56b56] shadow-[0_0_0_3px_rgba(213,107,86,0.12)]' : 'border-[#dde5da]'}`}
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}

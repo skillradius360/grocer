@@ -19,6 +19,7 @@ import {
 import { useProducts } from '../hooks/useProducts'
 import { AppHeader } from '../components/AppHeader'
 import { getSellerOffers, saveSellerOffers, seededOffers } from '../services/offerService'
+import { decimalOnly, digitsOnly, patterns, validateFieldsByRules } from '../utils/validation'
 
 const defaultFilters = {
   search: '',
@@ -108,6 +109,7 @@ export function OffersPage({ sellerSession, theme, onToggleTheme }) {
   const [stepIndex, setStepIndex] = useState(0)
   const [offers, setOffers] = useState(seededOffers)
   const [form, setForm] = useState(defaultOfferForm)
+  const [formErrors, setFormErrors] = useState({})
 
   useEffect(() => {
     let active = true
@@ -141,7 +143,12 @@ export function OffersPage({ sellerSession, theme, onToggleTheme }) {
   const selectedAudience = audienceTypes.find((item) => item.id === form.audience) || audienceTypes[0]
   const summary = createOfferSummary(form, products, categories)
 
-  const update = (field, value) => setForm((current) => ({ ...current, [field]: value }))
+  const update = (field, value) => {
+    const numericFields = ['buyQty', 'getQty', 'discountValue', 'minCartValue']
+    const nextValue = numericFields.includes(field) ? decimalOnly(value, 8) : value
+    setForm((current) => ({ ...current, [field]: nextValue }))
+    setFormErrors((current) => ({ ...current, [field]: '' }))
+  }
   const toggleArrayValue = (field, value) => {
     setForm((current) => {
       const exists = current[field].includes(value)
@@ -179,6 +186,22 @@ export function OffersPage({ sellerSession, theme, onToggleTheme }) {
   }
 
   const saveOffer = () => {
+    const nextErrors = validateFieldsByRules(form, {
+      title: { required: true, pattern: /^.{3,80}$/, message: 'Min 3 chars' },
+      buyQty: { required: true, pattern: patterns.positiveNumber, min: 1, message: 'Min 1' },
+      getQty: { required: form.offerType !== 'percent', pattern: patterns.positiveNumber, min: 1, message: 'Min 1' },
+      discountValue: { required: ['percent', 'bundle'].includes(form.offerType), pattern: patterns.positiveNumber, min: 1, max: 100, message: '1-100%' },
+      minCartValue: { required: true, pattern: patterns.positiveNumber, min: 0, message: 'Invalid amount' },
+      badgeText: { required: true, pattern: /^.{2,32}$/, message: '2-32 chars' },
+    })
+
+    if (form.scope === 'products' && form.productIds.length === 0) nextErrors.scope = 'Select products'
+    if (form.scope === 'categories' && form.categoryIds.length === 0) nextErrors.scope = 'Select categories'
+    if (form.scope === 'subcategories' && form.subcategories.length === 0) nextErrors.scope = 'Select subcategories'
+
+    setFormErrors(nextErrors)
+    if (Object.keys(nextErrors).length) return
+
     const nextOffer = {
       id: editingOfferId || `of-${Date.now()}`,
       title: form.title || 'Untitled offer',
@@ -306,6 +329,7 @@ export function OffersPage({ sellerSession, theme, onToggleTheme }) {
         <OfferFormPanel
           categories={categories}
           form={form}
+          formErrors={formErrors}
           loading={loading}
           offerTypes={offerTypes}
           products={products}
@@ -352,6 +376,7 @@ function OfferFormPanel({
   categories,
   editing,
   form,
+  formErrors,
   loading,
   offerTypes,
   products,
@@ -422,7 +447,7 @@ function OfferFormPanel({
 
           {stepIndex === 0 && (
             <div className="grid gap-3">
-              <TextInput label="Title" value={form.title} onChange={(value) => update('title', value)} placeholder="Weekend Basket Saver" />
+              <TextInput error={formErrors.title} label="Title" value={form.title} onChange={(value) => update('title', value)} placeholder="Weekend Basket Saver" />
               <TextInput label="Description" value={form.description} onChange={(value) => update('description', value)} placeholder="Short seller-facing note for this campaign" multiline />
               <div className="grid grid-cols-2 gap-2">
                 {offerTypes.map((type) => (
@@ -453,6 +478,7 @@ function OfferFormPanel({
           {stepIndex === 1 && (
             <div className="grid gap-3">
               <SegmentedScope form={form} update={update} />
+              {formErrors.scope && <p className="rounded-[14px] border border-[#efafa3] bg-[#fff2ef] px-3 py-2 text-[11px] font-bold text-[#b63a25]">{formErrors.scope}</p>}
               {form.scope === 'products' && (
                 <SelectableGrid loading={loading} emptyText="No products ready yet.">
                   {products.map((product) => (
@@ -501,10 +527,10 @@ function OfferFormPanel({
           {stepIndex === 2 && (
             <div className="grid gap-3">
               <div className="grid grid-cols-2 gap-2">
-                <TextInput label="Buy quantity" value={form.buyQty} onChange={(value) => update('buyQty', value)} inputMode="numeric" />
-                <TextInput label="Get / discount" value={selectedType.id === 'percent' ? form.discountValue : form.getQty} onChange={(value) => update(selectedType.id === 'percent' ? 'discountValue' : 'getQty', value)} inputMode="numeric" />
+                <TextInput error={formErrors.buyQty} label="Buy quantity" value={form.buyQty} onChange={(value) => update('buyQty', digitsOnly(value, 4))} inputMode="numeric" />
+                <TextInput error={selectedType.id === 'percent' ? formErrors.discountValue : formErrors.getQty} label="Get / discount" value={selectedType.id === 'percent' ? form.discountValue : form.getQty} onChange={(value) => update(selectedType.id === 'percent' ? 'discountValue' : 'getQty', digitsOnly(value, 4))} inputMode="numeric" />
               </div>
-              <TextInput label="Minimum cart value" value={form.minCartValue} onChange={(value) => update('minCartValue', value)} inputMode="numeric" />
+              <TextInput error={formErrors.minCartValue} label="Minimum cart value" value={form.minCartValue} onChange={(value) => update('minCartValue', digitsOnly(value, 6))} inputMode="numeric" />
               <div className="rounded-[18px] border border-[#f0c56e] bg-[#fff6e9] p-3 text-[12px] font-bold text-[#7a540c]">
                 Admin-created offer types can plug into this rule area later without changing the seller flow.
               </div>
@@ -534,7 +560,7 @@ function OfferFormPanel({
 
           {stepIndex === 4 && (
             <div className="grid gap-3">
-              <TextInput label="Customer badge text" value={form.badgeText} onChange={(value) => update('badgeText', value)} placeholder="Limited offer" />
+              <TextInput error={formErrors.badgeText} label="Customer badge text" value={form.badgeText} onChange={(value) => update('badgeText', value)} placeholder="Limited offer" />
               <div className="grid grid-cols-4 gap-2">
                 {['green', 'amber', 'violet', 'rose'].map((tone) => (
                   <button className={`tap-lift h-14 rounded-[16px] border ${form.theme === tone ? toneClasses[tone] : 'border-[#dde5da] bg-white active:bg-[#f8faf7]'}`} key={tone} type="button" onClick={() => update('theme', tone)} aria-label={`${tone} theme`}>
@@ -565,14 +591,17 @@ function OfferFormPanel({
   )
 }
 
-function TextInput({ label, value, onChange, placeholder, multiline, inputMode }) {
+function TextInput({ label, value, onChange, placeholder, multiline, inputMode, error }) {
   const Control = multiline ? 'textarea' : 'input'
 
   return (
     <label className="grid gap-1.5">
-      <span className="text-[12px] font-black text-[#26342b]">{label}</span>
+      <span className="flex items-center justify-between gap-2 text-[12px] font-black text-[#26342b]">
+        {label}
+        {error && <span className="text-[11px] text-[#b63a25]">{error}</span>}
+      </span>
       <Control
-        className="tap-lift min-h-12 rounded-[15px] border border-[#dde5da] bg-white px-3 py-3 text-[13px] font-bold text-[#111814] outline-none placeholder:text-[#9aa79d] focus:border-[#173f2a] focus:shadow-[0_0_0_4px_rgba(23,63,42,0.1)]"
+        className={`tap-lift min-h-12 rounded-[15px] border bg-white px-3 py-3 text-[13px] font-bold text-[#111814] outline-none placeholder:text-[#9aa79d] focus:border-[#173f2a] focus:shadow-[0_0_0_4px_rgba(23,63,42,0.1)] ${error ? 'border-[#d56b56] shadow-[0_0_0_3px_rgba(213,107,86,0.12)]' : 'border-[#dde5da]'}`}
         inputMode={inputMode}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
