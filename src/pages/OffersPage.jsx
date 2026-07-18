@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   BadgePercent,
   Boxes,
@@ -18,6 +18,7 @@ import {
 } from 'lucide-react'
 import { useProducts } from '../hooks/useProducts'
 import { AppHeader } from '../components/AppHeader'
+import { getSellerOffers, saveSellerOffers, seededOffers } from '../services/offerService'
 
 const defaultFilters = {
   search: '',
@@ -105,47 +106,31 @@ export function OffersPage({ sellerSession, theme, onToggleTheme }) {
   const [editingOfferId, setEditingOfferId] = useState('')
   const [pendingDeleteId, setPendingDeleteId] = useState('')
   const [stepIndex, setStepIndex] = useState(0)
-  const [offers, setOffers] = useState([
-    {
-      id: 'of-1',
-      title: 'Weekend Basket Saver',
-      type: 'Combo Saver',
-      audience: 'All customers',
-      scope: '3 grocery items',
-      status: 'Active',
-      accent: 'green',
-      formData: {
-        ...defaultOfferForm,
-        title: 'Weekend Basket Saver',
-        description: 'Basket discount for selected grocery products.',
-        offerType: 'bundle',
-        productIds: ['sp-2', 'sp-4'],
-        audience: 'all',
-        theme: 'green',
-      },
-    },
-    {
-      id: 'of-2',
-      title: 'First Order Delight',
-      type: 'Percent Off',
-      audience: 'New customers',
-      scope: 'Bengali category',
-      status: 'Draft',
-      accent: 'amber',
-      formData: {
-        ...defaultOfferForm,
-        title: 'First Order Delight',
-        description: 'Intro discount for first-time customers.',
-        offerType: 'percent',
-        active: false,
-        scope: 'categories',
-        categoryIds: ['bengali'],
-        audience: 'new',
-        theme: 'amber',
-      },
-    },
-  ])
+  const [offers, setOffers] = useState(seededOffers)
   const [form, setForm] = useState(defaultOfferForm)
+
+  useEffect(() => {
+    let active = true
+
+    getSellerOffers().then((nextOffers) => {
+      if (active) {
+        setOffers(nextOffers)
+        setActiveOfferId(nextOffers.find((offer) => offer.status === 'Active')?.id || nextOffers[0]?.id || '')
+      }
+    })
+
+    return () => {
+      active = false
+    }
+  }, [])
+
+  const replaceOffers = (updater) => {
+    setOffers((current) => {
+      const nextOffers = typeof updater === 'function' ? updater(current) : updater
+      saveSellerOffers(nextOffers)
+      return nextOffers
+    })
+  }
 
   const subcategories = useMemo(
     () => categories.flatMap((category) => category.subcategories.map((name) => `${category.name} / ${name}`)),
@@ -202,9 +187,10 @@ export function OffersPage({ sellerSession, theme, onToggleTheme }) {
       scope: summary.scope,
       status: form.active ? 'Active' : 'Draft',
       accent: form.theme || selectedType.tone,
+      source: 'Seller',
       formData: { ...form },
     }
-    setOffers((current) => (
+    replaceOffers((current) => (
       editingOfferId
         ? current.map((offer) => (offer.id === editingOfferId ? nextOffer : offer))
         : [nextOffer, ...current]
@@ -215,7 +201,7 @@ export function OffersPage({ sellerSession, theme, onToggleTheme }) {
   }
 
   const deleteOffer = (offerId) => {
-    setOffers((current) => {
+    replaceOffers((current) => {
       const nextOffers = current.filter((offer) => offer.id !== offerId)
       if (activeOfferId === offerId) {
         setActiveOfferId(nextOffers[0]?.id || '')

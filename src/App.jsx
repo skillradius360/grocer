@@ -5,6 +5,8 @@ import { OnboardingPage } from './pages/OnboardingPage'
 import { ReadyPage } from './pages/ReadyPage'
 import { SellerDashboardPage } from './pages/SellerDashboardPage'
 import { MenuProductsPage } from './pages/MenuProductsPage'
+import { OrdersPage } from './pages/OrdersPage'
+import { AnalyticsPage } from './pages/AnalyticsPage'
 import { OffersPage } from './pages/OffersPage'
 import { CustomersPage } from './pages/CustomersPage'
 import { SettingsPage } from './pages/SettingsPage'
@@ -182,11 +184,11 @@ function App() {
             path="/dashboard"
             element={<SellerDashboardPage sellerSession={sellerSession} setSellerSession={setSellerSession} theme={theme} onToggleTheme={() => setTheme((current) => (current === 'dark' ? 'light' : 'dark'))} />}
           />
-          <Route path="/orders" element={<SellerDashboardPage sellerSession={sellerSession} setSellerSession={setSellerSession} activePage="Orders" theme={theme} onToggleTheme={() => setTheme((current) => (current === 'dark' ? 'light' : 'dark'))} />} />
+          <Route path="/orders" element={<OrdersPage sellerSession={sellerSession} theme={theme} onToggleTheme={() => setTheme((current) => (current === 'dark' ? 'light' : 'dark'))} />} />
           <Route path="/menu" element={<MenuProductsPage sellerSession={sellerSession} theme={theme} onToggleTheme={() => setTheme((current) => (current === 'dark' ? 'light' : 'dark'))} />} />
           <Route path="/customers" element={<CustomersPage sellerSession={sellerSession} theme={theme} onToggleTheme={() => setTheme((current) => (current === 'dark' ? 'light' : 'dark'))} />} />
           <Route path="/offers" element={<OffersPage sellerSession={sellerSession} theme={theme} onToggleTheme={() => setTheme((current) => (current === 'dark' ? 'light' : 'dark'))} />} />
-          <Route path="/analytics" element={<SellerDashboardPage sellerSession={sellerSession} setSellerSession={setSellerSession} activePage="Analytics" theme={theme} onToggleTheme={() => setTheme((current) => (current === 'dark' ? 'light' : 'dark'))} />} />
+          <Route path="/analytics" element={<AnalyticsPage sellerSession={sellerSession} theme={theme} onToggleTheme={() => setTheme((current) => (current === 'dark' ? 'light' : 'dark'))} />} />
           <Route path="/ai-insights" element={<SellerDashboardPage sellerSession={sellerSession} setSellerSession={setSellerSession} activePage="Growth" theme={theme} onToggleTheme={() => setTheme((current) => (current === 'dark' ? 'light' : 'dark'))} />} />
           <Route path="/billing" element={<SellerDashboardPage sellerSession={sellerSession} setSellerSession={setSellerSession} activePage="Billing" theme={theme} onToggleTheme={() => setTheme((current) => (current === 'dark' ? 'light' : 'dark'))} />} />
           <Route path="/settings" element={<SettingsPage sellerSession={sellerSession} setSellerSession={setSellerSession} theme={theme} onToggleTheme={() => setTheme((current) => (current === 'dark' ? 'light' : 'dark'))} />} />
