@@ -250,7 +250,7 @@ export function OnboardingPage({
           <>
             <Field
               error={errors.gst}
-              label="GST number"
+              label="GST (optional)"
               value={form.gst}
               onChange={onFieldChange('gst')}
               placeholder="22AAAAA0000A1Z5"

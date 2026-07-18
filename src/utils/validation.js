@@ -2,6 +2,7 @@ export const patterns = {
   decimal: /^-?\d+(\.\d+)?$/,
   gst: /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/,
   name: /^[A-Za-z][A-Za-z\s.'-]{1,59}$/,
+  alphanumericName: /^[A-Za-z0-9][A-Za-z0-9\s.'-]{1,59}$/,
   phone: /^\+?[0-9\s-]{10,16}$/,
   pincode: /^[1-9][0-9]{5}$/,
   positiveNumber: /^(0|[1-9]\d*)(\.\d+)?$/,

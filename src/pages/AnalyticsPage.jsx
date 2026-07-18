@@ -54,12 +54,12 @@ export function AnalyticsPage({ sellerSession, theme, onToggleTheme }) {
       <AppHeader activePage="Analytics" sellerSession={sellerSession} theme={theme} onToggleTheme={onToggleTheme} />
 
       <main className="grid gap-3 px-4 pt-3 md:px-6 md:pt-5">
-        <Panel className="overflow-hidden p-4">
+        <Panel className="overflow-hidden p-3 sm:p-4">
           <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div className="min-w-0">
               <p className="text-[10px] font-black uppercase tracking-[0.08em] text-[#5b7567]">Analytics cockpit</p>
-              <h1 className="mt-1 text-[23px] font-black leading-tight">Sales, revenue, buyers, and losses</h1>
-              <p className="mt-1 max-w-[640px] text-[12px] font-semibold leading-relaxed text-[#647267]">
+              <h1 className="mt-0.5 text-[19px] font-black leading-tight sm:text-[23px]">Sales, revenue, buyers, and losses</h1>
+              <p className="mt-0.5 line-clamp-1 max-w-[640px] text-[11px] font-semibold leading-relaxed text-[#647267] sm:text-[12px]">
                 Firebase can feed these cards from orders, payments, inventory adjustments, buyer profiles, and cancellation events.
               </p>
             </div>

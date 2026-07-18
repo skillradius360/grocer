@@ -35,7 +35,6 @@ const defaultFilters = {
 export function MenuProductsPage({ sellerSession, theme, onToggleTheme }) {
   const navigate = useNavigate()
   const [filters, setFilters] = useState(defaultFilters)
-  const [activeTab, setActiveTab] = useState('Items')
   const [formMode, setFormMode] = useState('')
   const [selectedProduct, setSelectedProduct] = useState(null)
   const [inventoryProduct, setInventoryProduct] = useState(null)
@@ -143,40 +142,22 @@ export function MenuProductsPage({ sellerSession, theme, onToggleTheme }) {
     setSellerProducts((current) => current.map((item) => (item.id === product.id ? { ...item, status: nextStatus } : item)))
   }
 
-  const tabStyles = {
-    Items: 'bg-[#edf5ed] text-[#173f2a] shadow-[0_6px_14px_rgba(23,63,42,0.12)]',
-    Combos: 'bg-[#fff6e9] text-[#9a6500] shadow-[0_6px_14px_rgba(189,125,43,0.12)]',
-    Menus: 'bg-[#f0fff5] text-[#08783c] shadow-[0_6px_14px_rgba(8,120,60,0.12)]',
-  }
-
   return (
     <div className="ui-enter min-h-svh bg-[#f3f6f4] pb-5 text-[#111814] sm:min-h-[820px]">
       <AppHeader activePage="Menu" sellerSession={sellerSession} theme={theme} onToggleTheme={onToggleTheme} />
 
       <main className="grid gap-3 px-4 pt-3 md:px-6 md:pt-5">
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center justify-between gap-2.5 rounded-[18px] border border-[#dde5da] bg-white p-3 shadow-[0_10px_24px_rgba(23,63,42,0.06)]">
           <div>
-            <h1 className="text-[20px] font-black">Products management</h1>
-            <p className="text-[12px] font-bold text-[#647267]">Items, combos, menus, and stock controls</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.08em] text-[#5b7567]">Menu desk</p>
+            <h1 className="text-[18px] font-black leading-tight sm:text-[20px]">Products management</h1>
+            <p className="line-clamp-1 text-[11px] font-bold text-[#647267] sm:text-[12px]">Seller products, pricing, and stock controls</p>
           </div>
-          <button className="tap-lift inline-flex min-h-11 items-center gap-2 rounded-[14px] bg-[#173f2a] px-3 text-[12px] font-black text-white active:bg-[#08783c]" type="button" onClick={() => setFormMode('add')}>
+          <button className="tap-lift inline-flex min-h-10 shrink-0 items-center justify-center gap-1.5 rounded-[13px] bg-[#173f2a] px-3 text-[11px] font-black text-white active:bg-[#08783c] sm:min-h-11 sm:gap-2 sm:rounded-[14px] sm:text-[12px]" type="button" onClick={() => setFormMode('add')}>
             <Plus className="h-4 w-4" />
             Add
           </button>
         </div>
-        <div className="grid grid-cols-3 rounded-[14px] border border-[#dde5da] bg-[#edf1ed] p-1">
-          {['Items', 'Combos', 'Menus'].map((tab) => (
-            <button
-              className={`tap-lift min-h-9 rounded-[11px] text-[12px] font-black ${activeTab === tab ? tabStyles[tab] : 'text-[#647267] active:bg-white active:text-[#173f2a]'}`}
-              key={tab}
-              type="button"
-              onClick={() => setActiveTab(tab)}
-            >
-              {tab}
-            </button>
-          ))}
-        </div>
-
         <div className="grid grid-cols-5 gap-2">
           <StatsCard label="Total" value={stats.total} tone="blue" />
           <StatsCard label="Active" value={stats.active} />

@@ -52,7 +52,7 @@ const steps = {
     eyebrow: 'Step 3 of 3',
     title: 'Add tax details',
     copy: 'GST is captured now so Firebase and backend validation can connect without reshaping the screen.',
-    requiredFields: ['gst'],
+    requiredFields: [],
   },
 }
 
@@ -61,19 +61,19 @@ const validationRules = {
   otp: { required: true, pattern: /^[0-9]{4,6}$/, message: 'Enter 4-6 digit OTP' },
   shopCode: { required: true, pattern: /^[A-Za-z0-9-]{4,24}$/, message: 'Invalid shop code' },
   shopName: { required: true, pattern: patterns.shopName, message: 'Invalid shop name' },
-  ownerName: { required: true, pattern: patterns.name, message: 'Letters only' },
+  ownerName: { required: true, pattern: patterns.alphanumericName, message: 'Invalid owner name' },
   address: { required: true, pattern: /^.{8,180}$/, message: 'Add full address' },
   pincode: { required: true, pattern: patterns.pincode, message: '6 digit pincode' },
   latitude: { required: true, pattern: patterns.decimal, min: -90, max: 90, message: 'Invalid latitude' },
   longitude: { required: true, pattern: patterns.decimal, min: -180, max: 180, message: 'Invalid longitude' },
-  gst: { required: true, pattern: patterns.gst, message: 'Invalid GST' },
+  gst: { required: false, pattern: patterns.gst, message: 'Invalid GST' },
 }
 
 function App() {
   const navigate = useNavigate()
   const [authMode, setAuthMode] = useState('phone')
   const [sellerSession, setSellerSession] = useState(loadSellerSession)
-  const [theme, setTheme] = useState(() => window.localStorage.getItem('simplifyliving:theme') || 'dark')
+  const [theme, setTheme] = useState(() => window.localStorage.getItem('simplifyliving:theme') || 'light')
   const [form, setForm] = useState(() => ({
     ...initialForm,
     ...loadSellerSession().shop,

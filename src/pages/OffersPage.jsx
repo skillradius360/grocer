@@ -242,15 +242,15 @@ export function OffersPage({ sellerSession, theme, onToggleTheme }) {
       <AppHeader activePage="Offers" sellerSession={sellerSession} theme={theme} onToggleTheme={onToggleTheme} />
 
       <main className="grid gap-3 px-4 pt-3 md:px-6 md:pt-5">
-        <section className="rounded-[18px] border border-[#d8e5d7] bg-white p-3 shadow-[0_10px_24px_rgba(23,63,42,0.06)]">
-          <div className="flex items-center gap-3">
-              <span className="icon-chip grid h-11 w-11 shrink-0 place-items-center rounded-[15px] bg-[#edf5ed] text-[#173f2a]">
-                <Tag className="h-5 w-5" />
+        <section className="rounded-[18px] border border-[#d8e5d7] bg-white p-2.5 shadow-[0_10px_24px_rgba(23,63,42,0.06)] sm:p-3">
+          <div className="flex items-center gap-2.5 sm:gap-3">
+              <span className="icon-chip grid h-10 w-10 shrink-0 place-items-center rounded-[14px] bg-[#edf5ed] text-[#173f2a] sm:h-11 sm:w-11 sm:rounded-[15px]">
+                <Tag className="h-[18px] w-[18px] sm:h-5 sm:w-5" />
               </span>
               <div className="min-w-0">
                 <p className="text-[10px] font-black uppercase tracking-[0.08em] text-[#5b7567]">Offer Studio</p>
-                <h2 className="truncate text-[17px] font-black leading-tight text-[#111814]">Build targeted seller offers</h2>
-                <p className="mt-0.5 line-clamp-2 text-[11px] font-semibold leading-snug text-[#647267]">
+                <h2 className="truncate text-[15px] font-black leading-tight text-[#111814] sm:text-[17px]">Build targeted seller offers</h2>
+                <p className="mt-0.5 line-clamp-1 text-[10px] font-semibold leading-snug text-[#647267] sm:text-[11px]">
                   Products, rules, audience, and preview in one guided flow.
                 </p>
               </div>

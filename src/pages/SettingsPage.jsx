@@ -142,9 +142,9 @@ export function SettingsPage({ sellerSession, setSellerSession, theme, onToggleT
     const nextErrors = {
       ...validateFieldsByRules(shopInfo, {
         shopName: { required: true, pattern: patterns.shopName, message: 'Invalid shop name' },
-        ownerName: { required: true, pattern: patterns.name, message: 'Letters only' },
+        ownerName: { required: true, pattern: patterns.alphanumericName, message: 'Invalid owner name' },
         phone: { required: true, pattern: patterns.phone, message: 'Invalid phone' },
-        gst: { required: true, pattern: patterns.gst, message: 'Invalid GST' },
+        gst: { required: false, pattern: patterns.gst, message: 'Invalid GST' },
         address: { required: true, pattern: /^.{8,180}$/, message: 'Add full address' },
         pincode: { required: true, pattern: patterns.pincode, message: '6 digit pincode' },
         latitude: { required: true, pattern: patterns.decimal, min: -90, max: 90, message: 'Invalid latitude' },
@@ -199,15 +199,15 @@ export function SettingsPage({ sellerSession, setSellerSession, theme, onToggleT
 
       <main className="grid gap-4 px-4 pt-3 md:grid-cols-[1fr_0.85fr] md:px-6 md:pt-5">
         <section className="grid gap-4">
-          <div className="rounded-[20px] border border-[#dde5da] bg-white p-4 shadow-[0_12px_28px_rgba(23,63,42,0.07)]">
-            <div className="flex items-center gap-3">
-              <span className="icon-chip grid h-12 w-12 shrink-0 place-items-center rounded-[16px] bg-[#edf5ed] text-[#173f2a]">
-                <Store className="h-6 w-6" />
+          <div className="rounded-[20px] border border-[#dde5da] bg-white p-3 shadow-[0_12px_28px_rgba(23,63,42,0.07)] sm:p-4">
+            <div className="flex items-center gap-2.5 sm:gap-3">
+              <span className="icon-chip grid h-10 w-10 shrink-0 place-items-center rounded-[14px] bg-[#edf5ed] text-[#173f2a] sm:h-12 sm:w-12 sm:rounded-[16px]">
+                <Store className="h-5 w-5 sm:h-6 sm:w-6" />
               </span>
               <div className="min-w-0">
                 <p className="text-[10px] font-black uppercase tracking-[0.08em] text-[#5b7567]">Shop Settings</p>
-                <h1 className="truncate text-[22px] font-black">Manage shop profile and operations</h1>
-                <p className="mt-0.5 text-[12px] font-semibold text-[#647267]">Structured for future Firebase shop documents and operational config.</p>
+                <h1 className="truncate text-[18px] font-black sm:text-[22px]">Manage shop profile and operations</h1>
+                <p className="mt-0.5 line-clamp-1 text-[11px] font-semibold text-[#647267] sm:text-[12px]">Structured for future Firebase shop documents and operational config.</p>
               </div>
             </div>
           </div>
@@ -217,7 +217,7 @@ export function SettingsPage({ sellerSession, setSellerSession, theme, onToggleT
               <TextField error={fieldErrors.shopName} label="Shop name" value={shopInfo.shopName} onChange={(value) => updateInfo('shopName', value)} placeholder="Fresh Basket Mart" />
               <TextField error={fieldErrors.ownerName} label="Owner name" value={shopInfo.ownerName} onChange={(value) => updateInfo('ownerName', value)} placeholder="Owner full name" />
               <TextField error={fieldErrors.phone} label="Phone number" value={shopInfo.phone} onChange={(value) => updateInfo('phone', value)} placeholder="+91 98765 43210" inputMode="tel" />
-              <TextField error={fieldErrors.gst} label="GST number" value={shopInfo.gst} onChange={(value) => updateInfo('gst', value)} placeholder="22AAAAA0000A1Z5" />
+              <TextField error={fieldErrors.gst} label="GST (optional)" value={shopInfo.gst} onChange={(value) => updateInfo('gst', value)} placeholder="22AAAAA0000A1Z5" />
             </div>
             <TextField error={fieldErrors.address} label="Shop location / address" value={shopInfo.address} onChange={(value) => updateInfo('address', value)} placeholder="Street, area, landmark" multiline />
             <div className="grid gap-3 md:grid-cols-[0.7fr_1.3fr]">
