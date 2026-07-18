@@ -62,8 +62,8 @@ export function AppHeader({ sellerSession, activePage, theme, onToggleTheme, not
 
   return (
     <>
-      <header className="sticky top-0 z-10 flex h-[54px] items-center justify-between border-b border-[#dde5da] bg-[#fbfcf8]/95 px-3.5 backdrop-blur">
-        <div className="flex min-w-0 items-center gap-2.5">
+      <header className="sticky top-0 z-10 flex h-[54px] items-center justify-between border-b border-[#dde5da] bg-[#fbfcf8]/95 px-3.5 backdrop-blur max-[240px]:px-2">
+        <div className="flex min-w-0 items-center gap-2.5 max-[240px]:gap-1.5">
           {leadingAction ? (
             <button
               className="tap-lift grid h-9 w-9 shrink-0 place-items-center rounded-full text-[#26342b] hover:bg-[#edf5ed] active:bg-[#edf5ed] active:text-[#173f2a]"
@@ -83,7 +83,7 @@ export function AppHeader({ sellerSession, activePage, theme, onToggleTheme, not
               <Icon name="menu" className="h-[21px] w-[21px]" />
             </button>
           )}
-          <div className="icon-chip grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-[13px] bg-[#173f2a] text-xs font-black text-[#fbfcf8] shadow-[0_12px_24px_rgba(23,63,42,0.2)]">
+          <div className="icon-chip grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-[13px] bg-[#173f2a] text-xs font-black text-[#fbfcf8] shadow-[0_12px_24px_rgba(23,63,42,0.2)] max-[240px]:hidden">
             {initials}
           </div>
           <div className="min-w-0">
@@ -95,7 +95,7 @@ export function AppHeader({ sellerSession, activePage, theme, onToggleTheme, not
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2 max-[240px]:gap-1.5">
           {typeof notificationsEnabled === 'boolean' && (
             <button
               className={`tap-lift grid h-9 w-9 place-items-center rounded-[13px] border ${notificationsEnabled ? 'border-[#77d69c] bg-[#dff8e8] text-[#08783c] active:bg-[#fff6e9] active:text-[#9a6500]' : 'border-[#f3d38d] bg-[#fff6e9] text-[#9a6500] active:bg-[#dff8e8] active:text-[#08783c]'}`}
@@ -107,7 +107,7 @@ export function AppHeader({ sellerSession, activePage, theme, onToggleTheme, not
             </button>
           )}
           <button
-            className="tap-lift grid h-9 w-9 place-items-center rounded-[13px] border border-[#dde5da] bg-white text-[#173f2a] active:bg-[#edf5ed]"
+            className="tap-lift grid h-9 w-9 place-items-center rounded-[13px] border border-[#dde5da] bg-white text-[#173f2a] active:bg-[#edf5ed] max-[240px]:hidden"
             type="button"
             onClick={onToggleTheme}
             aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}

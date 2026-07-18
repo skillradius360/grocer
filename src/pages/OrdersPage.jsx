@@ -530,8 +530,8 @@ function BuyerOrderForm({ activeOffers, categories, errors, form, inventory, onC
   }
 
   return createPortal(
-    <div className="fixed inset-0 z-30 grid place-items-center overflow-hidden bg-[#11181466] p-4 sm:p-6">
-      <form className="grid max-h-[min(74dvh,620px)] w-full max-w-[560px] grid-rows-[auto_1fr_auto] overflow-hidden rounded-[22px] border border-[#dde5da] bg-[#fbfcf8] shadow-[0_24px_60px_rgba(17,24,20,0.24)]" onSubmit={onSubmit}>
+    <div className="fixed inset-0 z-30 grid place-items-center overflow-x-hidden overflow-y-auto bg-[#11181466] p-3 sm:p-6">
+      <form className="grid max-h-[min(74dvh,620px)] w-full min-w-0 max-w-[560px] grid-rows-[auto_1fr_auto] overflow-hidden rounded-[22px] border border-[#dde5da] bg-[#fbfcf8] shadow-[0_24px_60px_rgba(17,24,20,0.24)]" onSubmit={onSubmit}>
         <header className="flex items-start justify-between gap-3 border-b border-[#dde5da] bg-[#fbfcf8]/95 p-3.5 backdrop-blur sm:p-4">
           <div>
             <p className="text-[10px] font-black uppercase tracking-[0.08em] text-[#5b7567]">Buyer order form</p>
@@ -543,17 +543,17 @@ function BuyerOrderForm({ activeOffers, categories, errors, form, inventory, onC
           </button>
         </header>
 
-        <div className="grid min-h-0 gap-3 overflow-y-auto overscroll-contain p-3.5 sm:p-4">
+        <div className="grid min-h-0 min-w-0 gap-3 overflow-x-hidden overflow-y-auto overscroll-contain p-3.5 sm:p-4">
           <FormInput error={errors.buyerName} label="Buyer name" value={form.buyerName} onChange={(value) => onChange({ buyerName: value })} placeholder="Customer name" />
           <FormInput error={errors.buyerPhone} label="Phone number" value={form.buyerPhone} onChange={(value) => onChange({ buyerPhone: digitsOnly(value, 10) })} placeholder="+91..." inputMode="tel" />
           <FormInput error={errors.buyerAddress} label="Pickup / delivery address" value={form.buyerAddress} onChange={(value) => onChange({ buyerAddress: value })} placeholder="Flat, lane, landmark" />
 
           <div className="grid gap-3 rounded-[18px] border border-[#dde5da] bg-white p-3">
             <p className="text-[11px] font-black uppercase tracking-[0.06em] text-[#5b7567]">Product selection</p>
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid min-w-0 gap-3 sm:grid-cols-2">
               <label className="grid gap-1.5">
                 <span className="text-[11px] font-black uppercase tracking-[0.06em] text-[#5b7567]">Category</span>
-                <select className="tap-lift h-12 rounded-[15px] border border-[#dde5da] bg-[#fbfcf8] px-3 text-[13px] font-black text-[#111814] outline-none focus:border-[#173f2a] focus:shadow-[0_0_0_4px_rgba(23,63,42,0.1)]" value={form.categoryId} onChange={(event) => selectCategory(event.target.value)}>
+                <select className="tap-lift h-12 w-full min-w-0 rounded-[15px] border border-[#dde5da] bg-[#fbfcf8] px-3 text-[13px] font-black text-[#111814] outline-none focus:border-[#173f2a] focus:shadow-[0_0_0_4px_rgba(23,63,42,0.1)]" value={form.categoryId} onChange={(event) => selectCategory(event.target.value)}>
                   {categories.map((category) => (
                     <option key={category.id} value={category.id}>{category.name}</option>
                   ))}
@@ -562,7 +562,7 @@ function BuyerOrderForm({ activeOffers, categories, errors, form, inventory, onC
 
               <label className="grid gap-1.5">
                 <span className="text-[11px] font-black uppercase tracking-[0.06em] text-[#5b7567]">Sub-category</span>
-                <select className="tap-lift h-12 rounded-[15px] border border-[#dde5da] bg-[#fbfcf8] px-3 text-[13px] font-black text-[#111814] outline-none focus:border-[#173f2a] focus:shadow-[0_0_0_4px_rgba(23,63,42,0.1)]" value={form.subcategory} onChange={(event) => selectSubcategory(event.target.value)}>
+                <select className="tap-lift h-12 w-full min-w-0 rounded-[15px] border border-[#dde5da] bg-[#fbfcf8] px-3 text-[13px] font-black text-[#111814] outline-none focus:border-[#173f2a] focus:shadow-[0_0_0_4px_rgba(23,63,42,0.1)]" value={form.subcategory} onChange={(event) => selectSubcategory(event.target.value)}>
                   {subcategories.map((subcategory) => (
                     <option key={subcategory} value={subcategory}>{subcategory}</option>
                   ))}
@@ -572,7 +572,7 @@ function BuyerOrderForm({ activeOffers, categories, errors, form, inventory, onC
 
             <label className="grid gap-1.5">
               <span className="text-[11px] font-black uppercase tracking-[0.06em] text-[#5b7567]">Product variant</span>
-              <select className="tap-lift h-12 rounded-[15px] border border-[#dde5da] bg-[#fbfcf8] px-3 text-[13px] font-black text-[#111814] outline-none focus:border-[#173f2a] focus:shadow-[0_0_0_4px_rgba(23,63,42,0.1)]" value={form.productId} onChange={(event) => onChange({ productId: event.target.value, quantity: 1, offerId: '' })}>
+              <select className="tap-lift h-12 w-full min-w-0 rounded-[15px] border border-[#dde5da] bg-[#fbfcf8] px-3 text-[13px] font-black text-[#111814] outline-none focus:border-[#173f2a] focus:shadow-[0_0_0_4px_rgba(23,63,42,0.1)]" value={form.productId} onChange={(event) => onChange({ productId: event.target.value, quantity: 1, offerId: '' })}>
                 {variantOptions.map((item) => (
                   <option key={item.id} value={item.id} disabled={item.quantity <= 0 || item.sellerStatus !== 'Active'}>
                     {item.name} - {item.variant || 'Default'} - {item.sellerStatus !== 'Active' ? 'Hidden by seller' : item.quantity > 0 ? `${item.quantity} ${item.unit} left` : 'Out of stock'}
@@ -586,7 +586,7 @@ function BuyerOrderForm({ activeOffers, categories, errors, form, inventory, onC
             )}
 
             {selectedItem && (
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid min-w-0 grid-cols-3 gap-2">
                 <div className="rounded-[14px] border border-[#dde5da] bg-[#f8faf7] p-3">
                   <span className="block text-[9px] font-black uppercase tracking-[0.06em] text-[#647267]">Variant</span>
                   <strong className="mt-1 block text-[12px] font-black">{selectedItem.variant}</strong>
@@ -603,11 +603,11 @@ function BuyerOrderForm({ activeOffers, categories, errors, form, inventory, onC
             )}
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid min-w-0 grid-cols-2 gap-3">
             <FormInput error={errors.quantity} label="Quantity" value={form.quantity} onChange={(value) => onChange({ quantity: Math.min(quantityLimit, Number(digitsOnly(value, 4) || 1)) })} placeholder="1" type="number" min="1" max={quantityLimit} disabled={!selectedItem || selectedItem.quantity <= 0 || selectedItem.sellerStatus !== 'Active'} />
             <label className="grid gap-1.5">
               <span className="text-[11px] font-black uppercase tracking-[0.06em] text-[#5b7567]">Payment</span>
-              <select className="tap-lift h-12 rounded-[15px] border border-[#dde5da] bg-white px-3 text-[13px] font-black text-[#111814] outline-none focus:border-[#173f2a] focus:shadow-[0_0_0_4px_rgba(23,63,42,0.1)]" value={form.paymentMethod} onChange={(event) => onChange({ paymentMethod: event.target.value })}>
+              <select className="tap-lift h-12 w-full min-w-0 rounded-[15px] border border-[#dde5da] bg-white px-3 text-[13px] font-black text-[#111814] outline-none focus:border-[#173f2a] focus:shadow-[0_0_0_4px_rgba(23,63,42,0.1)]" value={form.paymentMethod} onChange={(event) => onChange({ paymentMethod: event.target.value })}>
                 <option>Cash</option>
                 <option>UPI</option>
               </select>
@@ -617,7 +617,7 @@ function BuyerOrderForm({ activeOffers, categories, errors, form, inventory, onC
           <label className="grid gap-1.5 rounded-[18px] border border-[#dde5da] bg-white p-3">
             <span className="text-[11px] font-black uppercase tracking-[0.06em] text-[#5b7567]">Apply active offer</span>
             <select
-              className="tap-lift h-12 rounded-[15px] border border-[#dde5da] bg-[#fbfcf8] px-3 text-[13px] font-black text-[#111814] outline-none focus:border-[#173f2a] focus:shadow-[0_0_0_4px_rgba(23,63,42,0.1)]"
+              className="tap-lift h-12 w-full min-w-0 rounded-[15px] border border-[#dde5da] bg-[#fbfcf8] px-3 text-[13px] font-black text-[#111814] outline-none focus:border-[#173f2a] focus:shadow-[0_0_0_4px_rgba(23,63,42,0.1)]"
               value={form.offerId}
               onChange={(event) => onChange({ offerId: event.target.value })}
               disabled={!selectedItem || applicableOffers.length === 0}
@@ -658,7 +658,7 @@ function BuyerOrderForm({ activeOffers, categories, errors, form, inventory, onC
           )}
         </div>
 
-        <footer className="grid grid-cols-[0.8fr_1.2fr] gap-2 border-t border-[#dde5da] bg-[#fbfcf8]/95 p-3.5 backdrop-blur sm:p-4">
+        <footer className="grid min-w-0 grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] gap-2 border-t border-[#dde5da] bg-[#fbfcf8]/95 p-3.5 backdrop-blur sm:p-4">
           <button className="tap-lift rounded-[16px] border border-[#dde5da] bg-white py-3 text-[13px] font-black active:bg-[#f8faf7]" type="button" onClick={onClose}>Cancel</button>
           <button className={`tap-lift rounded-[16px] py-3 text-[13px] font-black text-white ${selectedItem?.quantity > 0 && selectedItem?.sellerStatus === 'Active' ? 'bg-[#173f2a] active:bg-[#08783c]' : 'bg-[#c9d1ca]'}`} type="submit" disabled={!selectedItem || selectedItem.quantity <= 0 || selectedItem.sellerStatus !== 'Active'}>Create order</button>
         </footer>
@@ -676,7 +676,7 @@ function FormInput({ label, value, onChange, placeholder, type = 'text', error, 
         {error && <span className="normal-case tracking-normal text-[#b63a25]">{error}</span>}
       </span>
       <input
-        className={`tap-lift h-12 rounded-[15px] border bg-white px-3 text-[13px] font-black text-[#111814] outline-none placeholder:text-[#9aa79d] focus:border-[#173f2a] focus:shadow-[0_0_0_4px_rgba(23,63,42,0.1)] ${error ? 'border-[#d56b56] shadow-[0_0_0_3px_rgba(213,107,86,0.12)]' : 'border-[#dde5da]'}`}
+        className={`tap-lift h-12 w-full min-w-0 rounded-[15px] border bg-white px-3 text-[13px] font-black text-[#111814] outline-none placeholder:text-[#9aa79d] focus:border-[#173f2a] focus:shadow-[0_0_0_4px_rgba(23,63,42,0.1)] ${error ? 'border-[#d56b56] shadow-[0_0_0_3px_rgba(213,107,86,0.12)]' : 'border-[#dde5da]'}`}
         placeholder={placeholder}
         type={type}
         value={value}
