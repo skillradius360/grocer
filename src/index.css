@@ -1,0 +1,256 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Plus Jakarta Sans", Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+@layer base {
+  html {
+    min-width: 320px;
+    background: #fbfcf8;
+  }
+
+  body {
+    min-width: 320px;
+    min-height: 100svh;
+    margin: 0;
+    color: #111814;
+    background: #fbfcf8;
+    font-family: var(--font-sans);
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  button,
+  input {
+    font: inherit;
+  }
+
+  button {
+    cursor: pointer;
+  }
+
+  #root {
+    min-height: 100svh;
+  }
+}
+
+@layer utilities {
+  .ui-enter {
+    animation: ui-enter 420ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+
+  .ui-enter-delayed {
+    animation: ui-enter 520ms cubic-bezier(0.2, 0.8, 0.2, 1) 80ms both;
+  }
+
+  .tap-lift {
+    transition:
+      transform 180ms ease,
+      box-shadow 180ms ease,
+      border-color 180ms ease,
+      background-color 180ms ease;
+  }
+
+  .tap-lift:hover {
+    transform: translateY(-2px);
+  }
+
+  .tap-lift:active {
+    transform: translateY(0) scale(0.98);
+  }
+
+  .icon-chip {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .icon-chip > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .soft-pulse {
+    animation: soft-pulse 2.8s ease-in-out infinite;
+  }
+
+  .progress-glow {
+    box-shadow: 0 0 18px rgba(23, 63, 42, 0.28);
+  }
+
+  .theme-dark-orange {
+    color: #f8efe3;
+    background:
+      radial-gradient(circle at top left, rgba(249, 115, 22, 0.18), transparent 32%),
+      radial-gradient(circle at bottom right, rgba(245, 158, 11, 0.12), transparent 30%),
+      #0f1110;
+  }
+
+  .theme-dark-orange [class*="bg-[#fbfcf8]"],
+  .theme-dark-orange [class*="bg-[#f4f7f3]"],
+  .theme-dark-orange [class*="bg-[#f3f6f4]"],
+  .theme-dark-orange [class*="bg-[#eef2ed]"] {
+    background: #111410 !important;
+  }
+
+  .theme-dark-orange [class*="bg-white"] {
+    background: #1a1e18 !important;
+  }
+
+  .theme-dark-orange [class*="bg-[#f8faf7]"],
+  .theme-dark-orange [class*="bg-[#edf1ed]"],
+  .theme-dark-orange [class*="bg-[#eef2f0]"],
+  .theme-dark-orange [class*="bg-[#f3f7f1]"] {
+    background: #22271f !important;
+  }
+
+  .theme-dark-orange [class*="bg-[#173f2a]"],
+  .theme-dark-orange [class*="bg-[#1d2b21]"] {
+    background: #f97316 !important;
+  }
+
+  .theme-dark-orange [class*="bg-[#edf5ed]"],
+  .theme-dark-orange [class*="bg-[#dff8e8]"],
+  .theme-dark-orange [class*="bg-[#f0fff5]"],
+  .theme-dark-orange [class*="bg-[#edfbf2]"],
+  .theme-dark-orange [class*="bg-[#effbf3]"] {
+    background: rgba(34, 197, 94, 0.14) !important;
+  }
+
+  .theme-dark-orange [class*="bg-[#fff6e9]"],
+  .theme-dark-orange [class*="bg-[#fff3d6]"],
+  .theme-dark-orange [class*="bg-[#fff9ea]"],
+  .theme-dark-orange [class*="bg-[#fff4e9]"],
+  .theme-dark-orange [class*="bg-[#fff8e6]"],
+  .theme-dark-orange [class*="bg-[#fff0d3]"] {
+    background: rgba(249, 115, 22, 0.16) !important;
+  }
+
+  .theme-dark-orange [class*="bg-[#fff2ef]"],
+  .theme-dark-orange [class*="bg-[#ffe8e3]"],
+  .theme-dark-orange [class*="bg-[#fff0ee]"] {
+    background: rgba(239, 68, 68, 0.14) !important;
+  }
+
+  .theme-dark-orange [class*="bg-[#f1edff]"] {
+    background: rgba(168, 85, 247, 0.15) !important;
+  }
+
+  .theme-dark-orange [class*="text-[#111814]"],
+  .theme-dark-orange [class*="text-[#121812]"],
+  .theme-dark-orange [class*="text-[#101814]"],
+  .theme-dark-orange [class*="text-[#0f1712]"],
+  .theme-dark-orange [class*="text-[#26342b]"],
+  .theme-dark-orange [class*="text-[#25342b]"],
+  .theme-dark-orange [class*="text-[#334338]"] {
+    color: #f8efe3 !important;
+  }
+
+  .theme-dark-orange [class*="text-[#647267]"],
+  .theme-dark-orange [class*="text-[#667369]"],
+  .theme-dark-orange [class*="text-[#5b7567]"],
+  .theme-dark-orange [class*="text-[#536258]"],
+  .theme-dark-orange [class*="text-[#6a7b6f]"],
+  .theme-dark-orange [class*="text-[#8a978d]"],
+  .theme-dark-orange [class*="text-[#9aa79d]"] {
+    color: #b5aa9c !important;
+  }
+
+  .theme-dark-orange [class*="text-[#173f2a]"],
+  .theme-dark-orange [class*="text-[#08783c]"] {
+    color: #fb923c !important;
+  }
+
+  .theme-dark-orange [class*="text-[#9a6500]"],
+  .theme-dark-orange [class*="text-[#8b5a00]"],
+  .theme-dark-orange [class*="text-[#7a540c]"],
+  .theme-dark-orange [class*="text-[#6a4a10]"],
+  .theme-dark-orange [class*="text-[#bd7d2b]"] {
+    color: #fbbf24 !important;
+  }
+
+  .theme-dark-orange [class*="text-[#b63a25]"] {
+    color: #f87171 !important;
+  }
+
+  .theme-dark-orange [class*="text-[#5d43bd]"] {
+    color: #c4b5fd !important;
+  }
+
+  .theme-dark-orange [class*="border-[#dde5da]"],
+  .theme-dark-orange [class*="border-[#dfe5df]"],
+  .theme-dark-orange [class*="border-[#e0e7dd]"],
+  .theme-dark-orange [class*="border-[#edf1ed]"],
+  .theme-dark-orange [class*="border-[#e6ebe6]"],
+  .theme-dark-orange [class*="border-[#eef2ee]"],
+  .theme-dark-orange [class*="border-[#1f30270f]"] {
+    border-color: rgba(251, 146, 60, 0.2) !important;
+  }
+
+  .theme-dark-orange [class*="border-[#173f2a]"],
+  .theme-dark-orange [class*="border-[#77d69c]"],
+  .theme-dark-orange [class*="border-[#a7d6b5]"],
+  .theme-dark-orange [class*="border-[#b8d6c0]"] {
+    border-color: rgba(251, 146, 60, 0.55) !important;
+  }
+
+  .theme-dark-orange [class*="border-[#efafa3]"],
+  .theme-dark-orange [class*="border-[#f1b0a6]"] {
+    border-color: rgba(248, 113, 113, 0.48) !important;
+  }
+
+  .theme-dark-orange input,
+  .theme-dark-orange textarea,
+  .theme-dark-orange select {
+    color: #f8efe3;
+    background-color: #181c17;
+    border-color: rgba(251, 146, 60, 0.22);
+  }
+
+  .theme-dark-orange input::placeholder,
+  .theme-dark-orange textarea::placeholder {
+    color: #8f8579;
+  }
+
+  .theme-dark-orange .progress-glow {
+    box-shadow: 0 0 24px rgba(249, 115, 22, 0.38);
+  }
+}
+
+@keyframes ui-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes soft-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow: 0 16px 30px rgba(23, 63, 42, 0.18);
+  }
+
+  50% {
+    transform: scale(1.035);
+    box-shadow: 0 20px 38px rgba(23, 63, 42, 0.24);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
