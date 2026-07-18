@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Loader2, MessageCircle, PackageCheck, Phone, Plus, X } from 'lucide-react'
 import { AppHeader } from '../components/AppHeader'
 import { Badge, IconButton, Panel, SectionTitle, StatCard } from '../components/dashboard/DashboardComponents'
@@ -58,6 +59,7 @@ export function OrdersPage({ sellerSession, theme, onToggleTheme }) {
   const [formErrors, setFormErrors] = useState({})
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(true)
+  const [stockAlertVisible, setStockAlertVisible] = useState(true)
 
   useEffect(() => {
     let active = true
@@ -166,12 +168,11 @@ export function OrdersPage({ sellerSession, theme, onToggleTheme }) {
       <AppHeader activePage="Orders" sellerSession={sellerSession} theme={theme} onToggleTheme={onToggleTheme} />
 
       <main className="grid gap-3 px-4 pt-3 md:px-6 md:pt-5">
-        <Panel className="p-3 sm:p-4">
+        <Panel className="p-2.5 sm:p-3">
           <div className="flex items-center justify-between gap-2.5">
             <div className="min-w-0">
-              <p className="text-[10px] font-black uppercase tracking-[0.08em] text-[#5b7567]">Order desk</p>
-              <h1 className="mt-0.5 text-[19px] font-black leading-tight sm:text-[22px]">Seller order processing</h1>
-              <p className="mt-0.5 line-clamp-1 text-[11px] font-semibold text-[#647267] sm:text-[12px]">New to preparing, ready pickup, payment received, and completed history.</p>
+              <p className="text-[9px] font-black uppercase tracking-[0.08em] text-[#5b7567]">Orders</p>
+              <h1 className="mt-0.5 text-[17px] font-black leading-tight sm:text-[20px]">Order processing</h1>
             </div>
             <button className="tap-lift inline-flex min-h-10 shrink-0 items-center justify-center gap-1.5 rounded-[13px] bg-[#173f2a] px-3 text-[11px] font-black text-white active:bg-[#08783c] sm:min-h-11 sm:gap-2 sm:rounded-[14px] sm:text-[12px]" type="button" onClick={() => setFormOpen(true)}>
               <Plus className="h-4 w-4" />
@@ -204,9 +205,14 @@ export function OrdersPage({ sellerSession, theme, onToggleTheme }) {
           </div>
         </Panel>
 
-        {lowStockItems.length > 0 && (
-          <div className="rounded-[15px] border border-[#e9b653] bg-[#fff6e9] p-4 text-[12px] font-semibold text-[#6a4a10]">
-            <strong className="text-[#111814]">{lowStockItems.length} stock alert</strong> after buyer ordering. Items at 0 are drained and should be hidden from future buyer checkout.
+        {stockAlertVisible && lowStockItems.length > 0 && (
+          <div className="flex items-center gap-3 rounded-[15px] border border-[#e9b653] bg-[#fff6e9] p-3 text-[12px] font-semibold text-[#6a4a10]">
+            <p className="min-w-0 flex-1">
+              <strong className="text-[#111814]">{lowStockItems.length} stock alert</strong> after buyer ordering. Items at 0 are drained and should be hidden from future buyer checkout.
+            </p>
+            <button className="tap-lift grid h-8 w-8 shrink-0 place-items-center rounded-[11px] border border-[#e9b653] bg-white/70 text-[#6a4a10] active:bg-white" type="button" onClick={() => setStockAlertVisible(false)} aria-label="Dismiss stock alert">
+              <X className="h-4 w-4" />
+            </button>
           </div>
         )}
 
@@ -523,13 +529,13 @@ function BuyerOrderForm({ activeOffers, categories, errors, form, inventory, onC
     })
   }
 
-  return (
-    <div className="fixed inset-0 z-30 grid place-items-end bg-[#11181466] sm:place-items-center">
-      <form className="max-h-[94svh] w-full overflow-y-auto rounded-t-[24px] border border-[#dde5da] bg-[#fbfcf8] shadow-[0_-20px_60px_rgba(17,24,20,0.24)] sm:max-w-[520px] sm:rounded-[24px]" onSubmit={onSubmit}>
-        <header className="sticky top-0 z-10 flex items-start justify-between gap-3 border-b border-[#dde5da] bg-[#fbfcf8]/95 p-4 backdrop-blur">
+  return createPortal(
+    <div className="fixed inset-0 z-30 grid place-items-center overflow-hidden bg-[#11181466] p-4 sm:p-6">
+      <form className="grid max-h-[min(74dvh,620px)] w-full max-w-[560px] grid-rows-[auto_1fr_auto] overflow-hidden rounded-[22px] border border-[#dde5da] bg-[#fbfcf8] shadow-[0_24px_60px_rgba(17,24,20,0.24)]" onSubmit={onSubmit}>
+        <header className="flex items-start justify-between gap-3 border-b border-[#dde5da] bg-[#fbfcf8]/95 p-3.5 backdrop-blur sm:p-4">
           <div>
             <p className="text-[10px] font-black uppercase tracking-[0.08em] text-[#5b7567]">Buyer order form</p>
-            <h2 className="mt-1 text-[20px] font-black">Create test order</h2>
+            <h2 className="mt-1 text-[18px] font-black">Create test order</h2>
             <p className="mt-1 text-[12px] font-semibold text-[#647267]">Mirrors the fields the buyer app should submit later.</p>
           </div>
           <button className="tap-lift grid h-11 w-11 shrink-0 place-items-center rounded-[16px] border border-[#dde5da] bg-white active:border-[#efafa3] active:bg-[#fff2ef] active:text-[#b63a25]" type="button" onClick={onClose}>
@@ -537,7 +543,7 @@ function BuyerOrderForm({ activeOffers, categories, errors, form, inventory, onC
           </button>
         </header>
 
-        <div className="grid gap-3 p-4">
+        <div className="grid min-h-0 gap-3 overflow-y-auto overscroll-contain p-3.5 sm:p-4">
           <FormInput error={errors.buyerName} label="Buyer name" value={form.buyerName} onChange={(value) => onChange({ buyerName: value })} placeholder="Customer name" />
           <FormInput error={errors.buyerPhone} label="Phone number" value={form.buyerPhone} onChange={(value) => onChange({ buyerPhone: digitsOnly(value, 10) })} placeholder="+91..." inputMode="tel" />
           <FormInput error={errors.buyerAddress} label="Pickup / delivery address" value={form.buyerAddress} onChange={(value) => onChange({ buyerAddress: value })} placeholder="Flat, lane, landmark" />
@@ -652,12 +658,13 @@ function BuyerOrderForm({ activeOffers, categories, errors, form, inventory, onC
           )}
         </div>
 
-        <footer className="sticky bottom-0 grid grid-cols-[0.8fr_1.2fr] gap-2 border-t border-[#dde5da] bg-[#fbfcf8]/95 p-4 backdrop-blur">
+        <footer className="grid grid-cols-[0.8fr_1.2fr] gap-2 border-t border-[#dde5da] bg-[#fbfcf8]/95 p-3.5 backdrop-blur sm:p-4">
           <button className="tap-lift rounded-[16px] border border-[#dde5da] bg-white py-3 text-[13px] font-black active:bg-[#f8faf7]" type="button" onClick={onClose}>Cancel</button>
           <button className={`tap-lift rounded-[16px] py-3 text-[13px] font-black text-white ${selectedItem?.quantity > 0 && selectedItem?.sellerStatus === 'Active' ? 'bg-[#173f2a] active:bg-[#08783c]' : 'bg-[#c9d1ca]'}`} type="submit" disabled={!selectedItem || selectedItem.quantity <= 0 || selectedItem.sellerStatus !== 'Active'}>Create order</button>
         </footer>
       </form>
-    </div>
+    </div>,
+    document.body,
   )
 }
 

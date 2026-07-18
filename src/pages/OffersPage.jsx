@@ -110,6 +110,7 @@ export function OffersPage({ sellerSession, theme, onToggleTheme }) {
   const [offers, setOffers] = useState(seededOffers)
   const [form, setForm] = useState(defaultOfferForm)
   const [formErrors, setFormErrors] = useState({})
+  const [ruleNoticeVisible, setRuleNoticeVisible] = useState(true)
 
   useEffect(() => {
     let active = true
@@ -242,17 +243,14 @@ export function OffersPage({ sellerSession, theme, onToggleTheme }) {
       <AppHeader activePage="Offers" sellerSession={sellerSession} theme={theme} onToggleTheme={onToggleTheme} />
 
       <main className="grid gap-3 px-4 pt-3 md:px-6 md:pt-5">
-        <section className="rounded-[18px] border border-[#d8e5d7] bg-white p-2.5 shadow-[0_10px_24px_rgba(23,63,42,0.06)] sm:p-3">
+        <section className="rounded-[16px] border border-[#d8e5d7] bg-white p-2.5 shadow-[0_10px_24px_rgba(23,63,42,0.06)]">
           <div className="flex items-center gap-2.5 sm:gap-3">
-              <span className="icon-chip grid h-10 w-10 shrink-0 place-items-center rounded-[14px] bg-[#edf5ed] text-[#173f2a] sm:h-11 sm:w-11 sm:rounded-[15px]">
-                <Tag className="h-[18px] w-[18px] sm:h-5 sm:w-5" />
+              <span className="icon-chip grid h-9 w-9 shrink-0 place-items-center rounded-[13px] bg-[#edf5ed] text-[#173f2a] sm:h-10 sm:w-10 sm:rounded-[14px]">
+                <Tag className="h-[17px] w-[17px] sm:h-[18px] sm:w-[18px]" />
               </span>
               <div className="min-w-0">
-                <p className="text-[10px] font-black uppercase tracking-[0.08em] text-[#5b7567]">Offer Studio</p>
-                <h2 className="truncate text-[15px] font-black leading-tight text-[#111814] sm:text-[17px]">Build targeted seller offers</h2>
-                <p className="mt-0.5 line-clamp-1 text-[10px] font-semibold leading-snug text-[#647267] sm:text-[11px]">
-                  Products, rules, audience, and preview in one guided flow.
-                </p>
+                <p className="text-[9px] font-black uppercase tracking-[0.08em] text-[#5b7567]">Offers</p>
+                <h2 className="truncate text-[15px] font-black leading-tight text-[#111814] sm:text-[17px]">Offer studio</h2>
               </div>
           </div>
         </section>
@@ -345,6 +343,8 @@ export function OffersPage({ sellerSession, theme, onToggleTheme }) {
           update={update}
           onSave={saveOffer}
           editing={Boolean(editingOfferId)}
+          ruleNoticeVisible={ruleNoticeVisible}
+          onDismissRuleNotice={() => setRuleNoticeVisible(false)}
         />
       )}
     </div>
@@ -391,6 +391,8 @@ function OfferFormPanel({
   toggleArrayValue,
   update,
   onSave,
+  ruleNoticeVisible,
+  onDismissRuleNotice,
 }) {
   const SelectedTypeIcon = selectedType.icon
   const canSave = form.title.trim() && (
@@ -531,9 +533,14 @@ function OfferFormPanel({
                 <TextInput error={selectedType.id === 'percent' ? formErrors.discountValue : formErrors.getQty} label="Get / discount" value={selectedType.id === 'percent' ? form.discountValue : form.getQty} onChange={(value) => update(selectedType.id === 'percent' ? 'discountValue' : 'getQty', digitsOnly(value, 4))} inputMode="numeric" />
               </div>
               <TextInput error={formErrors.minCartValue} label="Minimum cart value" value={form.minCartValue} onChange={(value) => update('minCartValue', digitsOnly(value, 6))} inputMode="numeric" />
-              <div className="rounded-[18px] border border-[#f0c56e] bg-[#fff6e9] p-3 text-[12px] font-bold text-[#7a540c]">
-                Admin-created offer types can plug into this rule area later without changing the seller flow.
-              </div>
+              {ruleNoticeVisible && (
+                <div className="flex items-center gap-3 rounded-[18px] border border-[#f0c56e] bg-[#fff6e9] p-3 text-[12px] font-bold text-[#7a540c]">
+                  <p className="min-w-0 flex-1">Admin-created offer types can plug into this rule area later without changing the seller flow.</p>
+                  <button className="tap-lift grid h-8 w-8 shrink-0 place-items-center rounded-[11px] border border-[#f0c56e] bg-white/70 active:bg-white" type="button" onClick={onDismissRuleNotice} aria-label="Dismiss offer rule notice">
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              )}
             </div>
           )}
 

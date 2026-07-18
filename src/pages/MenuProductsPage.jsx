@@ -1,11 +1,12 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Loader2, Plus } from 'lucide-react'
+import { LayoutGrid, List, Loader2, Plus } from 'lucide-react'
 import { AppHeader } from '../components/AppHeader'
 import {
   DeleteDialog,
   FilterBar,
   InventoryModal,
+  MasterListModal,
   ProductCard,
   ProductForm,
   ProductTable,
@@ -35,7 +36,10 @@ const defaultFilters = {
 export function MenuProductsPage({ sellerSession, theme, onToggleTheme }) {
   const navigate = useNavigate()
   const [filters, setFilters] = useState(defaultFilters)
+  const [viewMode, setViewMode] = useState('grid')
   const [formMode, setFormMode] = useState('')
+  const [selectedMasterProduct, setSelectedMasterProduct] = useState(null)
+  const [masterListOpen, setMasterListOpen] = useState(false)
   const [selectedProduct, setSelectedProduct] = useState(null)
   const [inventoryProduct, setInventoryProduct] = useState(null)
   const [deleteProduct, setDeleteProduct] = useState(null)
@@ -144,14 +148,13 @@ export function MenuProductsPage({ sellerSession, theme, onToggleTheme }) {
 
   return (
     <div className="ui-enter min-h-svh bg-[#f3f6f4] pb-5 text-[#111814] sm:min-h-[820px]">
-      <AppHeader activePage="Menu" sellerSession={sellerSession} theme={theme} onToggleTheme={onToggleTheme} />
+      <AppHeader activePage="Products" sellerSession={sellerSession} theme={theme} onToggleTheme={onToggleTheme} />
 
       <main className="grid gap-3 px-4 pt-3 md:px-6 md:pt-5">
-        <div className="flex items-center justify-between gap-2.5 rounded-[18px] border border-[#dde5da] bg-white p-3 shadow-[0_10px_24px_rgba(23,63,42,0.06)]">
+        <div className="flex items-center justify-between gap-2.5 rounded-[16px] border border-[#dde5da] bg-white p-2.5 shadow-[0_10px_24px_rgba(23,63,42,0.06)]">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.08em] text-[#5b7567]">Menu desk</p>
-            <h1 className="text-[18px] font-black leading-tight sm:text-[20px]">Products management</h1>
-            <p className="line-clamp-1 text-[11px] font-bold text-[#647267] sm:text-[12px]">Seller products, pricing, and stock controls</p>
+            <p className="text-[9px] font-black uppercase tracking-[0.08em] text-[#5b7567]">Products</p>
+            <h1 className="text-[17px] font-black leading-tight sm:text-[19px]">Product management</h1>
           </div>
           <button className="tap-lift inline-flex min-h-10 shrink-0 items-center justify-center gap-1.5 rounded-[13px] bg-[#173f2a] px-3 text-[11px] font-black text-white active:bg-[#08783c] sm:min-h-11 sm:gap-2 sm:rounded-[14px] sm:text-[12px]" type="button" onClick={() => setFormMode('add')}>
             <Plus className="h-4 w-4" />
@@ -166,7 +169,7 @@ export function MenuProductsPage({ sellerSession, theme, onToggleTheme }) {
           <StatsCard label="Hidden" value={stats.hidden} tone="blue" />
         </div>
 
-        <FilterBar categories={categories} filters={filters} onFilter={patchFilter} />
+        <FilterBar categories={categories} filters={filters} onFilter={patchFilter} onOpenMasterList={() => setMasterListOpen(true)} />
 
         <div className="flex flex-wrap gap-2 rounded-[16px] border border-[#dde5da] bg-white p-3">
           <select className="h-10 flex-1 rounded-[12px] border border-[#dde5da] px-3 text-[12px] font-bold" value={filters.stock} onChange={(event) => patchFilter({ stock: event.target.value })}>
@@ -186,6 +189,14 @@ export function MenuProductsPage({ sellerSession, theme, onToggleTheme }) {
             <option value="price">Price</option>
             <option value="inventory">Inventory</option>
           </select>
+          <div className="flex h-10 shrink-0 items-center gap-1 rounded-[12px] bg-[#edf1ed] p-1">
+            <button className={`grid h-8 w-8 place-items-center rounded-[10px] ${viewMode === 'grid' ? 'bg-white text-[#173f2a] shadow-[0_8px_18px_rgba(23,63,42,0.12)]' : 'text-[#647267]'}`} type="button" onClick={() => setViewMode('grid')} aria-label="Grid view">
+              <LayoutGrid className="h-4 w-4" />
+            </button>
+            <button className={`grid h-8 w-8 place-items-center rounded-[10px] ${viewMode === 'table' ? 'bg-white text-[#173f2a] shadow-[0_8px_18px_rgba(23,63,42,0.12)]' : 'text-[#647267]'}`} type="button" onClick={() => setViewMode('table')} aria-label="Table view">
+              <List className="h-4 w-4" />
+            </button>
+          </div>
         </div>
 
         {message && <div className="rounded-[14px] border border-[#b8d6c0] bg-[#f0fff5] px-3 py-2 text-[12px] font-bold text-[#173f2a]">{message}</div>}
@@ -201,43 +212,49 @@ export function MenuProductsPage({ sellerSession, theme, onToggleTheme }) {
             <p className="mt-1 text-[12px] font-semibold text-[#647267]">Try another filter or add a product.</p>
           </div>
         ) : (
-          <section className="grid gap-4">
-            {Object.entries(groupedProducts).map(([category, collections]) => (
-              <div className="grid gap-3" key={category}>
-                <h2 className="text-[13px] font-black uppercase tracking-[0.05em] text-[#647267]">
-                  Category <span className="normal-case tracking-normal text-[#173f2a]">{category}</span>
-                </h2>
-                {Object.entries(collections).map(([collection, products]) => (
-                  <div key={collection}>
-                    <h3 className="mb-2 text-[12px] font-black uppercase tracking-[0.08em] text-[#173f2a]">Collection <span className="normal-case tracking-normal text-[#111814]">{collection}</span></h3>
-                    <div className="flex flex-wrap gap-3">
-                      {products.map((product, index) => (
-                        <ProductCard
-                          key={product.id}
-                          product={product}
-                          index={index}
-                          onEdit={() => {
-                            setSelectedProduct(product)
-                            setFormMode('edit')
-                          }}
-                          onInventory={() => setInventoryProduct(product)}
-                          onDelete={() => setDeleteProduct(product)}
-                          onToggle={() => toggleProduct(product)}
-                        />
-                      ))}
+          viewMode === 'grid' ? (
+            <section className="grid gap-4">
+              {Object.entries(groupedProducts).map(([category, collections]) => (
+                <div className="grid gap-3" key={category}>
+                  <h2 className="text-[13px] font-black uppercase tracking-[0.05em] text-[#647267]">
+                    Category <span className="normal-case tracking-normal text-[#173f2a]">{category}</span>
+                  </h2>
+                  {Object.entries(collections).map(([collection, products]) => (
+                    <div key={collection}>
+                      <h3 className="mb-2 text-[12px] font-black uppercase tracking-[0.08em] text-[#173f2a]">Collection <span className="normal-case tracking-normal text-[#111814]">{collection}</span></h3>
+                      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                        {products.map((product, index) => (
+                          <ProductCard
+                            key={product.id}
+                            product={product}
+                            index={index}
+                            onEdit={() => {
+                              setSelectedProduct(product)
+                              setFormMode('edit')
+                            }}
+                            onInventory={() => setInventoryProduct(product)}
+                            onDelete={() => setDeleteProduct(product)}
+                            onToggle={() => toggleProduct(product)}
+                          />
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            ))}
+                  ))}
+                </div>
+              ))}
+            </section>
+          ) : (
             <ProductTable
               products={visibleProducts}
               onEdit={(product) => {
                 setSelectedProduct(product)
                 setFormMode('edit')
               }}
+              onInventory={setInventoryProduct}
+              onDelete={setDeleteProduct}
+              onToggle={toggleProduct}
             />
-          </section>
+          )
         )}
       </main>
 
@@ -247,11 +264,26 @@ export function MenuProductsPage({ sellerSession, theme, onToggleTheme }) {
           masterProducts={masterProducts}
           mode={formMode}
           product={selectedProduct}
+          selectedMasterProduct={selectedMasterProduct}
           onClose={() => {
             setFormMode('')
             setSelectedProduct(null)
+            setSelectedMasterProduct(null)
           }}
           onSave={saveProduct}
+        />
+      )}
+      {masterListOpen && (
+        <MasterListModal
+          categories={categories}
+          masterProducts={masterProducts}
+          onClose={() => setMasterListOpen(false)}
+          onUseProduct={(product) => {
+            setSelectedMasterProduct(product)
+            setSelectedProduct(null)
+            setFormMode('add')
+            setMasterListOpen(false)
+          }}
         />
       )}
       {inventoryProduct && <InventoryModal product={inventoryProduct} onClose={() => setInventoryProduct(null)} onSave={saveInventory} />}

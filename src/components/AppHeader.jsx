@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Moon, Sun } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { Icon } from './Icon'
@@ -7,11 +7,10 @@ import { Badge } from './dashboard/DashboardComponents'
 const drawerLinks = [
   { label: 'Dashboard', path: '/dashboard', icon: 'dashboard' },
   { label: 'Orders', path: '/orders', icon: 'orders' },
-  { label: 'Menu', path: '/menu', icon: 'box' },
+  { label: 'Products', path: '/menu', icon: 'box' },
   { label: 'Customers', path: '/customers', icon: 'customers' },
   { label: 'Offers', path: '/offers', icon: 'tag' },
   { label: 'Analytics', path: '/analytics', icon: 'chart' },
-  { label: 'Growth', path: '/ai-insights', icon: 'spark' },
   { label: 'Billing', path: '/billing', icon: 'wallet' },
   { label: 'Settings', path: '/settings', icon: 'settings' },
   { label: 'Profile', path: '/profile', icon: 'user' },
@@ -34,9 +33,36 @@ export function AppHeader({ sellerSession, activePage, theme, onToggleTheme, not
     navigate(path)
   }
 
+  useEffect(() => {
+    if (!menuOpen && !profileOpen) return undefined
+    const previousHtmlOverflow = document.documentElement.style.overflow
+    const previousHtmlOverscroll = document.documentElement.style.overscrollBehavior
+    const previousOverflow = document.body.style.overflow
+    const previousBodyPosition = document.body.style.position
+    const previousBodyWidth = document.body.style.width
+    const scrollY = window.scrollY
+
+    document.documentElement.style.overflow = 'hidden'
+    document.documentElement.style.overscrollBehavior = 'none'
+    document.body.style.overflow = 'hidden'
+    document.body.style.position = 'fixed'
+    document.body.style.width = '100%'
+    document.body.style.top = `-${scrollY}px`
+
+    return () => {
+      document.documentElement.style.overflow = previousHtmlOverflow
+      document.documentElement.style.overscrollBehavior = previousHtmlOverscroll
+      document.body.style.overflow = previousOverflow
+      document.body.style.position = previousBodyPosition
+      document.body.style.width = previousBodyWidth
+      document.body.style.top = ''
+      window.scrollTo(0, scrollY)
+    }
+  }, [menuOpen, profileOpen])
+
   return (
     <>
-      <header className="sticky top-0 z-10 flex h-[58px] items-center justify-between border-b border-[#dde5da] bg-[#fbfcf8]/95 px-4 backdrop-blur">
+      <header className="sticky top-0 z-10 flex h-[54px] items-center justify-between border-b border-[#dde5da] bg-[#fbfcf8]/95 px-3.5 backdrop-blur">
         <div className="flex min-w-0 items-center gap-2.5">
           {leadingAction ? (
             <button
@@ -57,22 +83,22 @@ export function AppHeader({ sellerSession, activePage, theme, onToggleTheme, not
               <Icon name="menu" className="h-[21px] w-[21px]" />
             </button>
           )}
-          <div className="icon-chip grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-[14px] bg-[#173f2a] text-sm font-black text-[#fbfcf8] shadow-[0_12px_24px_rgba(23,63,42,0.2)]">
+          <div className="icon-chip grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-[13px] bg-[#173f2a] text-xs font-black text-[#fbfcf8] shadow-[0_12px_24px_rgba(23,63,42,0.2)]">
             {initials}
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">
-              <strong className="truncate text-[15px] font-black">{shopName}</strong>
+              <strong className="truncate text-[14px] font-black">{shopName}</strong>
               <Badge tone={shop.isLive ? 'green' : 'red'}>{shop.isLive ? 'Live' : 'Off'}</Badge>
             </div>
-            <p className="truncate text-[11px] font-semibold text-[#647267]">{activePage.toLowerCase()}</p>
+            <p className="truncate text-[10px] font-semibold text-[#647267]">{activePage.toLowerCase()}</p>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
           {typeof notificationsEnabled === 'boolean' && (
             <button
-              className={`tap-lift grid h-10 w-10 place-items-center rounded-[14px] border ${notificationsEnabled ? 'border-[#77d69c] bg-[#dff8e8] text-[#08783c] active:bg-[#fff6e9] active:text-[#9a6500]' : 'border-[#f3d38d] bg-[#fff6e9] text-[#9a6500] active:bg-[#dff8e8] active:text-[#08783c]'}`}
+              className={`tap-lift grid h-9 w-9 place-items-center rounded-[13px] border ${notificationsEnabled ? 'border-[#77d69c] bg-[#dff8e8] text-[#08783c] active:bg-[#fff6e9] active:text-[#9a6500]' : 'border-[#f3d38d] bg-[#fff6e9] text-[#9a6500] active:bg-[#dff8e8] active:text-[#08783c]'}`}
               type="button"
               aria-label="Notifications"
               onClick={onToggleNotifications}
@@ -81,7 +107,7 @@ export function AppHeader({ sellerSession, activePage, theme, onToggleTheme, not
             </button>
           )}
           <button
-            className="tap-lift grid h-10 w-10 place-items-center rounded-[14px] border border-[#dde5da] bg-white text-[#173f2a] active:bg-[#edf5ed]"
+            className="tap-lift grid h-9 w-9 place-items-center rounded-[13px] border border-[#dde5da] bg-white text-[#173f2a] active:bg-[#edf5ed]"
             type="button"
             onClick={onToggleTheme}
             aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
@@ -90,7 +116,7 @@ export function AppHeader({ sellerSession, activePage, theme, onToggleTheme, not
             {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
           </button>
           <button
-            className="tap-lift icon-chip grid h-10 w-10 place-items-center rounded-full bg-[#1d2b21] text-xs font-black text-white"
+            className="tap-lift icon-chip grid h-9 w-9 place-items-center rounded-full bg-[#1d2b21] text-[11px] font-black text-white"
             type="button"
             aria-label="Open shop profile"
             onClick={() => setProfileOpen((current) => !current)}
@@ -143,9 +169,9 @@ export function AppHeader({ sellerSession, activePage, theme, onToggleTheme, not
       )}
 
       {menuOpen && (
-        <div className="fixed inset-0 z-20 bg-[#11181466]" role="presentation" onClick={() => setMenuOpen(false)}>
+        <div className="fixed inset-0 z-20 h-dvh overflow-hidden bg-[#11181466]" role="presentation" onClick={() => setMenuOpen(false)}>
           <aside
-            className="ui-enter h-full w-[82%] max-w-[320px] bg-[#fbfcf8] p-4 shadow-[18px_0_50px_rgba(17,24,20,0.22)]"
+            className="ui-enter h-full w-[82%] max-w-[320px] overflow-y-auto overscroll-contain bg-[#fbfcf8] p-4 shadow-[18px_0_50px_rgba(17,24,20,0.22)]"
             aria-label="Seller navigation"
             onClick={(event) => event.stopPropagation()}
           >

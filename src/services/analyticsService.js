@@ -67,6 +67,17 @@ function filterOrdersByPeriod(orders, period) {
   })
 }
 
+function filterOrdersByDateRange(orders, dateRange) {
+  if (!dateRange?.startDate && !dateRange?.endDate) return orders
+  const start = dateRange.startDate ? new Date(`${dateRange.startDate}T00:00:00`) : null
+  const end = dateRange.endDate ? new Date(`${dateRange.endDate}T23:59:59`) : null
+
+  return orders.filter((order) => {
+    const orderDate = parseOrderDate(order)
+    return (!start || orderDate >= start) && (!end || orderDate <= end)
+  })
+}
+
 function getTrendBucket(order, period) {
   const date = parseOrderDate(order)
   if (period === 'day') {
@@ -228,9 +239,9 @@ function buildInsights({ sales, revenue, repeatBuyers, loss, topProduct }) {
   ]
 }
 
-export async function getAnalytics(period = 'month') {
+export async function getAnalytics(period = 'month', dateRange = {}) {
   const [orders, inventory] = await Promise.all([getSellerOrders(), getOrderInventory()])
-  const periodOrders = filterOrdersByPeriod(orders, period)
+  const periodOrders = filterOrdersByDateRange(filterOrdersByPeriod(orders, period), dateRange)
   const completedOrders = periodOrders.filter((order) => order.status === 'Completed' && order.paymentStatus === 'Paid')
   const revenue = completedOrders.reduce((sum, order) => sum + orderTotal(order), 0)
   const sales = completedOrders.length

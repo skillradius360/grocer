@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes, useNavigate } from 'react-router-dom'
+import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { AuthPage } from './pages/AuthPage'
 import { OnboardingPage } from './pages/OnboardingPage'
@@ -10,6 +10,8 @@ import { AnalyticsPage } from './pages/AnalyticsPage'
 import { OffersPage } from './pages/OffersPage'
 import { CustomersPage } from './pages/CustomersPage'
 import { SettingsPage } from './pages/SettingsPage'
+import { ProfilePage } from './pages/ProfilePage'
+import { BillingPage } from './pages/BillingPage'
 import { createSellerSession, loadSellerSession, saveSellerSession } from './lib/sellerStore'
 import { decimalOnly, digitsOnly, patterns, validateFieldsByRules } from './utils/validation'
 
@@ -69,11 +71,16 @@ const validationRules = {
   gst: { required: false, pattern: patterns.gst, message: 'Invalid GST' },
 }
 
+const googleAuthUrl = import.meta.env.VITE_GOOGLE_AUTH_URL || 'https://accounts.google.com/'
+
 function App() {
   const navigate = useNavigate()
+  const location = useLocation()
+  const isAuthRoute = location.pathname === '/auth'
   const [authMode, setAuthMode] = useState('phone')
   const [sellerSession, setSellerSession] = useState(loadSellerSession)
   const [theme, setTheme] = useState(() => window.localStorage.getItem('simplifyliving:theme') || 'light')
+  const [otpRequested, setOtpRequested] = useState(false)
   const [form, setForm] = useState(() => ({
     ...initialForm,
     ...loadSellerSession().shop,
@@ -86,6 +93,11 @@ function App() {
 
   useEffect(() => {
     window.localStorage.setItem('simplifyliving:theme', theme)
+    document.body.classList.toggle('theme-dark-orange', theme === 'dark')
+
+    return () => {
+      document.body.classList.remove('theme-dark-orange')
+    }
   }, [theme])
 
   const updateField = (field) => (event) => {
@@ -120,9 +132,20 @@ function App() {
       shopCode: ['shopCode'],
     }
 
+    if (authMode === 'phone' && !otpRequested) {
+      if (validateFields(['phone'])) {
+        setOtpRequested(true)
+      }
+      return
+    }
+
     if (validateFields(fieldsByMode[authMode])) {
       navigate('/onboarding/profile')
     }
+  }
+
+  const continueWithGoogle = () => {
+    window.location.assign(googleAuthUrl)
   }
 
   const continueStep = (stepKey) => {
@@ -137,9 +160,9 @@ function App() {
   }
 
   return (
-    <main className={`${theme === 'dark' ? 'theme-dark-orange' : ''} min-h-svh bg-[#fbfcf8] text-[#111814] md:grid md:place-items-center md:bg-[linear-gradient(135deg,rgba(25,86,57,0.1),transparent_30%),linear-gradient(315deg,rgba(233,180,87,0.14),transparent_34%),#eef2ed] md:p-6`}>
+    <main className={`${theme === 'dark' ? 'theme-dark-orange' : ''} ${isAuthRoute ? 'fixed inset-0 h-dvh overflow-hidden' : 'min-h-svh'} bg-[#fbfcf8] text-[#111814] md:grid md:place-items-center md:bg-[linear-gradient(135deg,rgba(15,138,75,0.18),transparent_34%),linear-gradient(315deg,rgba(255,176,32,0.18),transparent_30%),linear-gradient(180deg,#f6fbf7,#edf8f0)] md:p-6`}>
       <section
-        className="min-h-svh w-full bg-[#fbfcf8] md:min-h-[min(900px,calc(100svh-48px))] md:max-w-[960px] md:overflow-hidden md:rounded-[26px] md:border md:border-[#1f30270f] md:shadow-[0_24px_70px_rgba(22,37,29,0.14)] xl:max-w-[1180px]"
+        className={`${isAuthRoute ? 'h-full overflow-hidden md:h-[calc(100dvh-48px)] md:min-h-0' : 'min-h-svh md:min-h-[min(900px,calc(100svh-48px))]'} w-full bg-[#fbfcf8] md:max-w-[960px] md:overflow-hidden md:rounded-[26px] md:border md:border-[#1f30270f] md:shadow-[0_24px_70px_rgba(22,37,29,0.14)] xl:max-w-[1180px]`}
         aria-label="Seller app"
       >
         <Routes>
@@ -153,10 +176,13 @@ function App() {
                 form={form}
                 onAuthMode={(mode) => {
                   setAuthMode(mode)
+                  setOtpRequested(false)
                   setErrors({})
                 }}
                 onFieldChange={updateField}
                 onContinue={continueAuth}
+                onGoogleContinue={continueWithGoogle}
+                otpRequested={otpRequested}
               />
             }
           />
@@ -215,10 +241,9 @@ function App() {
           <Route path="/customers" element={<CustomersPage sellerSession={sellerSession} theme={theme} onToggleTheme={() => setTheme((current) => (current === 'dark' ? 'light' : 'dark'))} />} />
           <Route path="/offers" element={<OffersPage sellerSession={sellerSession} theme={theme} onToggleTheme={() => setTheme((current) => (current === 'dark' ? 'light' : 'dark'))} />} />
           <Route path="/analytics" element={<AnalyticsPage sellerSession={sellerSession} theme={theme} onToggleTheme={() => setTheme((current) => (current === 'dark' ? 'light' : 'dark'))} />} />
-          <Route path="/ai-insights" element={<SellerDashboardPage sellerSession={sellerSession} setSellerSession={setSellerSession} activePage="Growth" theme={theme} onToggleTheme={() => setTheme((current) => (current === 'dark' ? 'light' : 'dark'))} />} />
-          <Route path="/billing" element={<SellerDashboardPage sellerSession={sellerSession} setSellerSession={setSellerSession} activePage="Billing" theme={theme} onToggleTheme={() => setTheme((current) => (current === 'dark' ? 'light' : 'dark'))} />} />
+          <Route path="/billing" element={<BillingPage sellerSession={sellerSession} theme={theme} onToggleTheme={() => setTheme((current) => (current === 'dark' ? 'light' : 'dark'))} />} />
           <Route path="/settings" element={<SettingsPage sellerSession={sellerSession} setSellerSession={setSellerSession} theme={theme} onToggleTheme={() => setTheme((current) => (current === 'dark' ? 'light' : 'dark'))} />} />
-          <Route path="/profile" element={<SellerDashboardPage sellerSession={sellerSession} setSellerSession={setSellerSession} activePage="Profile" theme={theme} onToggleTheme={() => setTheme((current) => (current === 'dark' ? 'light' : 'dark'))} />} />
+          <Route path="/profile" element={<ProfilePage sellerSession={sellerSession} setSellerSession={setSellerSession} theme={theme} onToggleTheme={() => setTheme((current) => (current === 'dark' ? 'light' : 'dark'))} />} />
           <Route path="*" element={<Navigate to="/auth" replace />} />
         </Routes>
       </section>

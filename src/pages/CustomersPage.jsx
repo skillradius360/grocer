@@ -1,18 +1,13 @@
 import { useMemo, useState } from 'react'
 import {
-  ChevronLeft,
-  ChevronRight,
-  Clock,
+  Clock3,
   Heart,
   MapPin,
   Phone,
   ReceiptText,
   Search,
   ShoppingBag,
-  Sparkles,
-  Star,
   UserRound,
-  Users,
   X,
 } from 'lucide-react'
 import { AppHeader } from '../components/AppHeader'
@@ -26,8 +21,9 @@ const customers = [
     area: 'Salt Lake',
     joinedAt: 'Today',
     lastOrder: 'Today, 7:45 PM',
-    segment: 'new',
+    segment: 'New',
     orders: 2,
+    returns: 0,
     spend: 486,
     avgOrder: 243,
     favouriteItems: ['Basmati Rice', 'Toast', 'Mustard Oil'],
@@ -42,8 +38,9 @@ const customers = [
     area: 'Lake Town',
     joinedAt: '3 months ago',
     lastOrder: 'Yesterday',
-    segment: 'top',
+    segment: 'Top buyer',
     orders: 38,
+    returns: 1,
     spend: 15480,
     avgOrder: 407,
     favouriteItems: ['Chicken sandwich', 'Chicken Fried Momo', 'Cold drinks'],
@@ -58,8 +55,9 @@ const customers = [
     area: 'Dum Dum',
     joinedAt: '8 months ago',
     lastOrder: '5 days ago',
-    segment: 'top',
+    segment: 'Top buyer',
     orders: 51,
+    returns: 2,
     spend: 22100,
     avgOrder: 433,
     favouriteItems: ['Basmati Rice', 'Ghee', 'Rice'],
@@ -74,8 +72,9 @@ const customers = [
     area: 'Baguiati',
     joinedAt: '1 year ago',
     lastOrder: '32 days ago',
-    segment: 'inactive',
+    segment: 'Inactive',
     orders: 9,
+    returns: 4,
     spend: 2770,
     avgOrder: 308,
     favouriteItems: ['Toast', 'Snacks', 'Noodles'],
@@ -90,8 +89,9 @@ const customers = [
     area: 'New Town',
     joinedAt: '2 weeks ago',
     lastOrder: '2 days ago',
-    segment: 'regular',
+    segment: 'Regular',
     orders: 7,
+    returns: 0,
     spend: 3360,
     avgOrder: 480,
     favouriteItems: ['Basmati Rice', 'Soups', 'Oil'],
@@ -106,8 +106,9 @@ const customers = [
     area: 'Kestopur',
     joinedAt: '6 days ago',
     lastOrder: 'Never ordered',
-    segment: 'new',
+    segment: 'New',
     orders: 0,
+    returns: 0,
     spend: 0,
     avgOrder: 0,
     favouriteItems: ['No orders yet'],
@@ -122,8 +123,9 @@ const customers = [
     area: 'Ultadanga',
     joinedAt: '5 months ago',
     lastOrder: 'Today, 2:10 PM',
-    segment: 'regular',
+    segment: 'Regular',
     orders: 19,
+    returns: 1,
     spend: 7320,
     avgOrder: 385,
     favouriteItems: ['Sweets', 'Toast', 'Snacks'],
@@ -132,186 +134,178 @@ const customers = [
   },
 ]
 
-const filters = [
-  { id: 'all', label: 'All customers', icon: Users },
-  { id: 'top', label: 'Completed most', icon: Star },
-  { id: 'new', label: 'New customer', icon: Sparkles },
-  { id: 'regular', label: 'Regular', icon: Heart },
-  { id: 'inactive', label: 'Inactive', icon: Clock },
+const segmentStyles = {
+  New: 'border-[#f0c56e] bg-[#fff6e9] text-[#9a6500]',
+  'Top buyer': 'border-[#77d69c] bg-[#dff8e8] text-[#08783c]',
+  Regular: 'border-[#c7b8ff] bg-[#f1edff] text-[#5d43bd]',
+  Inactive: 'border-[#efafa3] bg-[#fff2ef] text-[#b63a25]',
+}
+
+const customerFilters = [
+  { id: 'all', label: 'All' },
+  { id: 'best', label: 'Best customers' },
+  { id: 'frequent', label: 'Frequent customers' },
+  { id: 'returns', label: 'Most returns' },
 ]
 
-const segmentStyles = {
-  new: 'border-[#f0c56e] bg-[#fff6e9] text-[#9a6500]',
-  top: 'border-[#77d69c] bg-[#dff8e8] text-[#08783c]',
-  regular: 'border-[#c7b8ff] bg-[#f1edff] text-[#5d43bd]',
-  inactive: 'border-[#efafa3] bg-[#fff2ef] text-[#b63a25]',
-}
-
-const pageSize = 4
-
 export function CustomersPage({ sellerSession, theme, onToggleTheme }) {
-  const [activeFilter, setActiveFilter] = useState('all')
   const [query, setQuery] = useState('')
-  const [sortBy, setSortBy] = useState('orders')
-  const [page, setPage] = useState(1)
-  const [selectedId, setSelectedId] = useState(customers[0].id)
+  const [customerFilter, setCustomerFilter] = useState('all')
+  const [selectedCustomer, setSelectedCustomer] = useState(null)
 
-  const filteredCustomers = useMemo(() => {
+  const visibleCustomers = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase()
-    return customers
-      .filter((customer) => activeFilter === 'all' || customer.segment === activeFilter)
-      .filter((customer) => (
-        !normalizedQuery ||
-        customer.name.toLowerCase().includes(normalizedQuery) ||
-        customer.phone.includes(normalizedQuery) ||
-        customer.area.toLowerCase().includes(normalizedQuery)
-      ))
-      .sort((a, b) => {
-        if (sortBy === 'orders') return b.orders - a.orders
-        if (sortBy === 'spend') return b.spend - a.spend
-        if (sortBy === 'avg') return b.avgOrder - a.avgOrder
-        return a.name.localeCompare(b.name)
-      })
-  }, [activeFilter, query, sortBy])
+    const searchedCustomers = customers.filter((customer) => (
+      !normalizedQuery ||
+      customer.name.toLowerCase().includes(normalizedQuery) ||
+      customer.phone.includes(normalizedQuery) ||
+      customer.area.toLowerCase().includes(normalizedQuery)
+    ))
 
-  const totalPages = Math.max(1, Math.ceil(filteredCustomers.length / pageSize))
-  const visibleCustomers = filteredCustomers.slice((page - 1) * pageSize, page * pageSize)
-  const selectedCustomer = customers.find((customer) => customer.id === selectedId) || visibleCustomers[0] || customers[0]
+    if (customerFilter === 'best') {
+      return searchedCustomers.filter((customer) => customer.spend >= 7000).sort((a, b) => b.spend - a.spend)
+    }
 
-  const updateFilter = (filter) => {
-    setActiveFilter(filter)
-    setPage(1)
-  }
+    if (customerFilter === 'frequent') {
+      return searchedCustomers.filter((customer) => customer.orders >= 10).sort((a, b) => b.orders - a.orders)
+    }
+
+    if (customerFilter === 'returns') {
+      return searchedCustomers.filter((customer) => customer.returns > 0).sort((a, b) => b.returns - a.returns)
+    }
+
+    return searchedCustomers
+  }, [customerFilter, query])
 
   return (
-    <div className="ui-enter min-h-svh bg-[#f4f7f3] pb-5 text-[#111814] sm:min-h-[820px]">
+    <div className="ui-enter min-h-svh overflow-x-hidden bg-[#f4f7f3] pb-5 text-[#111814] sm:min-h-[820px]">
       <AppHeader activePage="Customers" sellerSession={sellerSession} theme={theme} onToggleTheme={onToggleTheme} />
 
-      <main className="grid gap-3 px-4 pt-3 md:grid-cols-[1.1fr_0.9fr] md:px-6 md:pt-5">
-        <section className="grid gap-3">
-          <div className="grid grid-cols-3 gap-2">
-            <Metric value={customers.length} label="Total" tone="green" />
-            <Metric value={customers.filter((customer) => customer.segment === 'new').length} label="New" tone="amber" />
-            <Metric value={customers.filter((customer) => customer.segment === 'top').length} label="Top buyers" tone="violet" />
+      <main className="grid min-w-0 gap-3 px-4 pt-3 md:px-6 md:pt-5">
+        <section className="flex items-center justify-between gap-3 rounded-[16px] border border-[#dde5da] bg-white p-2.5 shadow-[0_10px_24px_rgba(23,63,42,0.06)]">
+          <div className="min-w-0">
+            <p className="text-[9px] font-black uppercase tracking-[0.08em] text-[#5b7567]">Customers</p>
+            <h1 className="truncate text-[17px] font-black leading-tight sm:text-[19px]">Buyer list</h1>
           </div>
-
-          <div className="rounded-[18px] border border-[#dde5da] bg-white p-3 shadow-[0_10px_24px_rgba(23,63,42,0.06)]">
-            <div className="flex min-h-12 items-center gap-2 rounded-[14px] border border-[#dde5da] bg-[#fbfcf8] px-3 text-[#647267] focus-within:border-[#173f2a] focus-within:shadow-[0_0_0_4px_rgba(23,63,42,0.1)]">
-              <Search className="h-5 w-5 shrink-0" />
-              <input className="min-w-0 flex-1 bg-transparent text-[13px] font-bold text-[#111814] outline-none placeholder:text-[#9aa79d]" value={query} onChange={(event) => { setQuery(event.target.value); setPage(1) }} placeholder="Search name, phone, area..." />
-            </div>
-            <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
-              {filters.map((filter) => (
-                <button className={`tap-lift inline-flex shrink-0 items-center gap-2 rounded-full border px-3 py-2 text-[11px] font-black ${activeFilter === filter.id ? 'border-[#173f2a] bg-[#edf5ed] text-[#173f2a]' : 'border-[#dde5da] bg-white text-[#647267] active:bg-[#f8faf7]'}`} key={filter.id} type="button" onClick={() => updateFilter(filter.id)}>
-                  <filter.icon className="h-4 w-4" />
-                  {filter.label}
-                </button>
-              ))}
-            </div>
-            <select className="mt-3 h-11 w-full rounded-[14px] border border-[#dde5da] bg-white px-3 text-[12px] font-black outline-none" value={sortBy} onChange={(event) => setSortBy(event.target.value)}>
-              <option value="orders">Sort by completed orders</option>
-              <option value="spend">Sort by total spend</option>
-              <option value="avg">Sort by average order</option>
-              <option value="name">Sort by name</option>
-            </select>
-          </div>
-
-          <div className="grid gap-2">
-            {visibleCustomers.map((customer) => (
-              <button className={`tap-lift flex items-center gap-3 rounded-[18px] border bg-white p-3 text-left shadow-[0_10px_24px_rgba(23,63,42,0.06)] ${selectedCustomer.id === customer.id ? segmentStyles[customer.segment] : 'border-[#dde5da] active:bg-[#f8faf7]'}`} key={customer.id} type="button" onClick={() => setSelectedId(customer.id)}>
-                <span className={`icon-chip grid h-12 w-12 shrink-0 place-items-center rounded-[16px] ${segmentStyles[customer.segment]}`}>
-                  <UserRound className="h-6 w-6" />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <strong className="block truncate text-[14px] font-black text-[#111814]">{customer.name}</strong>
-                  <small className="block truncate text-[11px] font-bold text-[#647267]">{customer.area} · {customer.lastOrder}</small>
-                </span>
-                <span className="rounded-full bg-[#edf5ed] px-2 py-1 text-[10px] font-black text-[#173f2a]">{customer.orders} orders</span>
-              </button>
-            ))}
-          </div>
-
-          <div className="flex items-center justify-between rounded-[16px] border border-[#dde5da] bg-white p-2">
-            <button className="tap-lift grid h-10 w-10 place-items-center rounded-[13px] border border-[#dde5da] bg-white disabled:opacity-40" type="button" disabled={page === 1} onClick={() => setPage((current) => Math.max(1, current - 1))} aria-label="Previous page">
-              <ChevronLeft className="h-5 w-5" />
-            </button>
-            <span className="text-[12px] font-black text-[#647267]">Page {page} of {totalPages}</span>
-            <button className="tap-lift grid h-10 w-10 place-items-center rounded-[13px] border border-[#dde5da] bg-white disabled:opacity-40" type="button" disabled={page === totalPages} onClick={() => setPage((current) => Math.min(totalPages, current + 1))} aria-label="Next page">
-              <ChevronRight className="h-5 w-5" />
-            </button>
-          </div>
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-[14px] bg-[#edf5ed] text-[14px] font-black text-[#173f2a]">
+            {customers.length}
+          </span>
         </section>
 
-        <CustomerDetail customer={selectedCustomer} />
-      </main>
-    </div>
-  )
-}
+        <label className="flex min-h-12 min-w-0 items-center gap-2 rounded-[16px] border border-[#dde5da] bg-white px-3 text-[#647267] shadow-[0_10px_24px_rgba(23,63,42,0.06)] focus-within:border-[#173f2a]">
+          <Search className="h-5 w-5 shrink-0" />
+          <input
+            className="min-w-0 flex-1 bg-transparent text-[13px] font-bold text-[#111814] outline-none placeholder:text-[#9aa79d]"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Search name, phone, area..."
+          />
+        </label>
 
-function Metric({ value, label, tone }) {
-  const styles = {
-    green: 'bg-[#dff8e8] text-[#08783c]',
-    amber: 'bg-[#fff6e9] text-[#9a6500]',
-    violet: 'bg-[#f1edff] text-[#5d43bd]',
-  }
+        <div className="flex min-w-0 gap-2 overflow-x-auto rounded-[16px] border border-[#dde5da] bg-white p-2 shadow-[0_10px_24px_rgba(23,63,42,0.06)]" aria-label="Customer filters">
+          {customerFilters.map((filter) => (
+            <button
+              className={`tap-lift min-h-10 shrink-0 rounded-[13px] px-3 text-[12px] font-black ${
+                customerFilter === filter.id
+                  ? 'bg-[#173f2a] text-white shadow-[0_10px_20px_rgba(23,63,42,0.18)]'
+                  : 'bg-[#f8faf7] text-[#647267] active:bg-[#edf5ed] active:text-[#173f2a]'
+              }`}
+              key={filter.id}
+              type="button"
+              onClick={() => setCustomerFilter(filter.id)}
+            >
+              {filter.label}
+            </button>
+          ))}
+        </div>
 
-  return (
-    <div className="tap-lift rounded-[18px] border border-[#dde5da] bg-white p-3 text-center shadow-[0_10px_24px_rgba(23,63,42,0.06)]">
-      <strong className={`mx-auto grid h-10 w-10 place-items-center rounded-[14px] text-[15px] font-black ${styles[tone]}`}>{value}</strong>
-      <span className="mt-2 block text-[9px] font-black uppercase tracking-[0.06em] text-[#647267]">{label}</span>
-    </div>
-  )
-}
+        <section className="grid min-w-0 gap-2 sm:grid-cols-2 xl:grid-cols-3">
+          {visibleCustomers.map((customer) => (
+            <button
+              className="tap-lift flex min-w-0 items-center gap-3 rounded-[18px] border border-[#dde5da] bg-white p-3 text-left shadow-[0_10px_24px_rgba(23,63,42,0.06)] active:border-[#173f2a] active:bg-[#edf5ed]"
+              key={customer.id}
+              type="button"
+              onClick={() => setSelectedCustomer(customer)}
+            >
+              <span className={`icon-chip grid h-12 w-12 shrink-0 place-items-center rounded-[16px] ${segmentStyles[customer.segment]}`}>
+                <UserRound className="h-6 w-6" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <strong className="block truncate text-[14px] font-black text-[#111814]">{customer.name}</strong>
+                <small className="block truncate text-[11px] font-bold text-[#647267]">{customer.phone}</small>
+                <small className="mt-1 block truncate text-[11px] font-semibold text-[#647267]">{customer.area} - {customer.lastOrder}</small>
+              </span>
+            </button>
+          ))}
+        </section>
 
-function CustomerDetail({ customer }) {
-  return (
-    <aside className="rounded-[22px] border border-[#dde5da] bg-white p-4 shadow-[0_14px_34px_rgba(23,63,42,0.08)] md:sticky md:top-[78px] md:self-start">
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-3">
-          <span className={`icon-chip grid h-14 w-14 shrink-0 place-items-center rounded-[18px] ${segmentStyles[customer.segment]}`}>
-            <UserRound className="h-7 w-7" />
-          </span>
-          <div className="min-w-0">
-            <p className="text-[10px] font-black uppercase tracking-[0.08em] text-[#5b7567]">Customer profile</p>
-            <h2 className="truncate text-[20px] font-black">{customer.name}</h2>
+        {visibleCustomers.length === 0 && (
+          <div className="rounded-[18px] border border-[#dde5da] bg-white p-6 text-center">
+            <strong className="block text-[15px] font-black">No customers found</strong>
+            <p className="mt-1 text-[12px] font-semibold text-[#647267]">Try another name, phone, area, or filter.</p>
           </div>
-        </div>
-        <button className="tap-lift grid h-9 w-9 place-items-center rounded-[13px] border border-[#dde5da] bg-white active:bg-[#fff2ef]" type="button" aria-label="Close profile">
-          <X className="h-4 w-4" />
-        </button>
-      </div>
+        )}
+      </main>
 
-      <div className="mt-4 grid grid-cols-3 gap-2">
-        <ProfileStat value={customer.orders} label="Orders" />
-        <ProfileStat value={`Rs ${customer.spend}`} label="Spend" />
-        <ProfileStat value={`Rs ${customer.avgOrder}`} label="Avg" />
-      </div>
-
-      <div className="mt-4 grid gap-2 text-[12px] font-bold">
-        <InfoLine icon={Phone} label="Phone" value={customer.phone} />
-        <InfoLine icon={MapPin} label="Area" value={customer.area} />
-        <InfoLine icon={Clock} label="Joined" value={customer.joinedAt} />
-        <InfoLine icon={ReceiptText} label="Last order" value={customer.lastOrder} />
-      </div>
-
-      <InsightBlock icon={Heart} title="Favourite items" items={customer.favouriteItems} tone="green" />
-      <InsightBlock icon={Search} title="Searched items" items={customer.searchedItems} tone="amber" />
-
-      <div className="mt-3 rounded-[18px] border border-[#dde5da] bg-[#f8faf7] p-3">
-        <div className="mb-2 flex items-center gap-2 text-[#173f2a]">
-          <ShoppingBag className="h-4 w-4" />
-          <strong className="text-[12px] font-black">Seller note</strong>
-        </div>
-        <p className="text-[12px] font-semibold leading-relaxed text-[#647267]">{customer.notes}</p>
-      </div>
-    </aside>
+      {selectedCustomer && <CustomerModal customer={selectedCustomer} onClose={() => setSelectedCustomer(null)} />}
+    </div>
   )
 }
 
-function ProfileStat({ value, label }) {
+function CustomerModal({ customer, onClose }) {
   return (
-    <div className="rounded-[15px] bg-[#f8faf7] p-3 text-center">
-      <strong className="block text-[16px] font-black leading-none text-[#111814]">{value}</strong>
+    <div className="fixed inset-0 z-40 grid place-items-center overflow-hidden bg-[#11181466] p-3 sm:p-5" role="dialog" aria-modal="true">
+      <aside className="max-h-[min(82svh,680px)] w-full max-w-[440px] overflow-x-hidden overflow-y-auto rounded-[24px] border border-[#dde5da] bg-[#fbfcf8] shadow-[0_24px_60px_rgba(17,24,20,0.24)]">
+        <header className="sticky top-0 z-10 flex items-start justify-between gap-3 border-b border-[#dde5da] bg-[#fbfcf8]/95 p-4 backdrop-blur">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className={`icon-chip grid h-14 w-14 shrink-0 place-items-center rounded-[18px] ${segmentStyles[customer.segment]}`}>
+              <UserRound className="h-7 w-7" />
+            </span>
+            <div className="min-w-0">
+              <p className="text-[10px] font-black uppercase tracking-[0.08em] text-[#5b7567]">Customer data</p>
+              <h2 className="truncate text-[20px] font-black">{customer.name}</h2>
+              <p className="truncate text-[12px] font-semibold text-[#647267]">{customer.email}</p>
+            </div>
+          </div>
+          <button className="tap-lift grid h-11 w-11 shrink-0 place-items-center rounded-[16px] border border-[#dde5da] bg-white active:border-[#efafa3] active:bg-[#fff2ef] active:text-[#b63a25]" type="button" onClick={onClose} aria-label="Close customer details">
+            <X className="h-4 w-4" />
+          </button>
+        </header>
+
+        <div className="grid gap-3 p-4">
+          <div className="grid grid-cols-3 gap-2">
+            <Stat value={customer.orders} label="Orders" />
+            <Stat value={`Rs ${customer.spend}`} label="Spend" />
+            <Stat value={customer.returns} label="Returns" />
+          </div>
+
+          <section className="grid gap-2 rounded-[18px] border border-[#dde5da] bg-white p-3">
+            <InfoLine icon={Phone} label="Phone" value={customer.phone} />
+            <InfoLine icon={MapPin} label="Area" value={customer.area} />
+            <InfoLine icon={Clock3} label="Joined" value={customer.joinedAt} />
+            <InfoLine icon={ReceiptText} label="Last order" value={customer.lastOrder} />
+          </section>
+
+          <TagBlock icon={Heart} title="Favourite items" items={customer.favouriteItems} tone="green" />
+          <TagBlock icon={Search} title="Searched items" items={customer.searchedItems} tone="amber" />
+
+          <section className="rounded-[18px] border border-[#dde5da] bg-white p-3">
+            <div className="mb-2 flex items-center gap-2 text-[#173f2a]">
+              <ShoppingBag className="h-4 w-4" />
+              <strong className="text-[12px] font-black">Seller note</strong>
+            </div>
+            <p className="text-[12px] font-semibold leading-relaxed text-[#647267]">{customer.notes}</p>
+          </section>
+        </div>
+      </aside>
+    </div>
+  )
+}
+
+function Stat({ value, label }) {
+  return (
+    <div className="min-w-0 rounded-[15px] bg-[#f8faf7] p-3 text-center">
+      <strong className="block truncate text-[15px] font-black leading-none text-[#111814]">{value}</strong>
       <span className="mt-1 block text-[9px] font-black uppercase text-[#647267]">{label}</span>
     </div>
   )
@@ -319,7 +313,7 @@ function ProfileStat({ value, label }) {
 
 function InfoLine({ icon: Icon, label, value }) {
   return (
-    <div className="flex items-center gap-2 rounded-[14px] border border-[#edf1ed] bg-[#fbfcf8] p-2">
+    <div className="flex min-w-0 items-center gap-2 rounded-[14px] border border-[#edf1ed] bg-[#fbfcf8] p-2">
       <span className="grid h-8 w-8 shrink-0 place-items-center rounded-[11px] bg-[#edf5ed] text-[#173f2a]">
         <Icon className="h-4 w-4" />
       </span>
@@ -331,11 +325,11 @@ function InfoLine({ icon: Icon, label, value }) {
   )
 }
 
-function InsightBlock({ icon: Icon, title, items, tone }) {
+function TagBlock({ icon: Icon, title, items, tone }) {
   const styles = tone === 'green' ? 'bg-[#dff8e8] text-[#08783c]' : 'bg-[#fff6e9] text-[#9a6500]'
 
   return (
-    <section className="mt-3 rounded-[18px] border border-[#dde5da] bg-white p-3">
+    <section className="rounded-[18px] border border-[#dde5da] bg-white p-3">
       <div className="mb-2 flex items-center gap-2">
         <span className={`grid h-8 w-8 place-items-center rounded-[11px] ${styles}`}>
           <Icon className="h-4 w-4" />
@@ -344,7 +338,7 @@ function InsightBlock({ icon: Icon, title, items, tone }) {
       </div>
       <div className="flex flex-wrap gap-2">
         {items.map((item) => (
-          <span className="rounded-full border border-[#dde5da] bg-[#fbfcf8] px-2.5 py-1 text-[11px] font-bold text-[#26342b]" key={item}>{item}</span>
+          <span className="max-w-full rounded-full border border-[#dde5da] bg-[#fbfcf8] px-2.5 py-1 text-[11px] font-bold text-[#26342b]" key={item}>{item}</span>
         ))}
       </div>
     </section>

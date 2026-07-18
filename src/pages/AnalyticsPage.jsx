@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Loader2, TrendingDown, TrendingUp } from 'lucide-react'
+import { Filter, Loader2, TrendingDown, TrendingUp, X } from 'lucide-react'
 import { AppHeader } from '../components/AppHeader'
 import { Badge, Panel, SectionTitle } from '../components/dashboard/DashboardComponents'
 import { Icon } from '../components/Icon'
@@ -22,15 +22,18 @@ function compact(value) {
 
 export function AnalyticsPage({ sellerSession, theme, onToggleTheme }) {
   const [period, setPeriod] = useState('month')
+  const [dateRange, setDateRange] = useState({ startDate: '', endDate: '' })
   const [analytics, setAnalytics] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [peakAlertVisible, setPeakAlertVisible] = useState(true)
+  const [filtersOpen, setFiltersOpen] = useState(false)
 
   useEffect(() => {
     let active = true
 
     async function loadAnalytics() {
       setLoading(true)
-      const nextAnalytics = await getAnalytics(period)
+      const nextAnalytics = await getAnalytics(period, dateRange)
       if (active) {
         setAnalytics(nextAnalytics)
         setLoading(false)
@@ -42,7 +45,7 @@ export function AnalyticsPage({ sellerSession, theme, onToggleTheme }) {
     return () => {
       active = false
     }
-  }, [period])
+  }, [dateRange, period])
 
   const maxRevenue = useMemo(
     () => Math.max(...(analytics?.revenueTrend || []).map((item) => item.revenue), 1),
@@ -54,28 +57,45 @@ export function AnalyticsPage({ sellerSession, theme, onToggleTheme }) {
       <AppHeader activePage="Analytics" sellerSession={sellerSession} theme={theme} onToggleTheme={onToggleTheme} />
 
       <main className="grid gap-3 px-4 pt-3 md:px-6 md:pt-5">
-        <Panel className="overflow-hidden p-3 sm:p-4">
-          <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <Panel className="overflow-hidden p-2.5 sm:p-3">
+          <div className="flex items-start justify-between gap-2.5">
             <div className="min-w-0">
-              <p className="text-[10px] font-black uppercase tracking-[0.08em] text-[#5b7567]">Analytics cockpit</p>
-              <h1 className="mt-0.5 text-[19px] font-black leading-tight sm:text-[23px]">Sales, revenue, buyers, and losses</h1>
-              <p className="mt-0.5 line-clamp-1 max-w-[640px] text-[11px] font-semibold leading-relaxed text-[#647267] sm:text-[12px]">
-                Firebase can feed these cards from orders, payments, inventory adjustments, buyer profiles, and cancellation events.
+              <p className="text-[9px] font-black uppercase tracking-[0.08em] text-[#5b7567]">Analytics</p>
+              <h1 className="mt-0.5 text-[17px] font-black leading-tight sm:text-[21px]">Sales and revenue</h1>
+              <p className="mt-0.5 line-clamp-1 max-w-[560px] text-[10px] font-semibold leading-snug text-[#647267] sm:text-[12px]">
+                Orders, payments, inventory, and buyer trends.
               </p>
             </div>
-            <div className="grid grid-cols-4 gap-1 rounded-[15px] border border-[#dde5da] bg-[#edf1ed] p-1">
-              {periods.map((item) => (
-                <button
-                  className={`tap-lift min-h-10 rounded-[12px] px-2 text-[11px] font-black ${period === item.id ? 'bg-[#173f2a] text-white shadow-[0_10px_22px_rgba(23,63,42,0.2)]' : 'text-[#647267] active:bg-white active:text-[#173f2a]'}`}
-                  key={item.id}
-                  type="button"
-                  onClick={() => setPeriod(item.id)}
-                >
-                  {item.label}
-                </button>
-              ))}
-            </div>
+            <button className={`tap-lift grid h-10 w-10 shrink-0 place-items-center rounded-[13px] border text-[#173f2a] ${filtersOpen ? 'border-[#173f2a] bg-[#edf5ed]' : 'border-[#dde5da] bg-white'}`} type="button" onClick={() => setFiltersOpen((open) => !open)} aria-label="Toggle analytics filters">
+              <Filter className="h-5 w-5" />
+            </button>
           </div>
+          {filtersOpen && (
+            <div className="mt-2 grid gap-2 rounded-[15px] border border-[#dde5da] bg-white p-2 md:grid-cols-[160px_1fr_1fr]">
+              <select
+                className="h-10 min-w-0 rounded-[12px] border border-[#dde5da] bg-[#fbfcf8] px-3 text-[12px] font-black text-[#111814] outline-none"
+                value={period}
+                onChange={(event) => setPeriod(event.target.value)}
+                aria-label="Analytics period"
+              >
+                {periods.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}
+              </select>
+              <input
+                className="h-10 min-w-0 rounded-[12px] border border-[#dde5da] bg-[#fbfcf8] px-3 text-[12px] font-bold text-[#111814] outline-none"
+                type="date"
+                value={dateRange.startDate}
+                onChange={(event) => setDateRange((current) => ({ ...current, startDate: event.target.value }))}
+                aria-label="Start date"
+              />
+              <input
+                className="h-10 min-w-0 rounded-[12px] border border-[#dde5da] bg-[#fbfcf8] px-3 text-[12px] font-bold text-[#111814] outline-none"
+                type="date"
+                value={dateRange.endDate}
+                onChange={(event) => setDateRange((current) => ({ ...current, endDate: event.target.value }))}
+                aria-label="End date"
+              />
+            </div>
+          )}
         </Panel>
 
         {loading || !analytics ? (
@@ -97,7 +117,7 @@ export function AnalyticsPage({ sellerSession, theme, onToggleTheme }) {
               <Panel className="p-4">
                 <SectionTitle title="Business health" action={<Badge tone="green">{analytics.health.score}/100</Badge>} />
                 <div className="grid gap-4 sm:grid-cols-[132px_1fr] sm:items-center">
-                  <div className="relative mx-auto grid h-[132px] w-[132px] place-items-center rounded-full" style={{ background: `conic-gradient(#173f2a ${analytics.health.score * 3.6}deg, #edf1ed 0deg)` }}>
+                  <div className="relative mx-auto grid aspect-square w-[132px] shrink-0 place-items-center rounded-full" style={{ background: `conic-gradient(#173f2a ${analytics.health.score * 3.6}deg, #edf1ed 0deg)` }}>
                     <div className="grid h-[96px] w-[96px] place-items-center rounded-full bg-white text-center">
                       <strong className="text-[27px] font-black leading-none">{analytics.health.score}</strong>
                       <span className="text-[9px] font-black uppercase tracking-[0.05em] text-[#647267]">Healthy</span>
@@ -182,9 +202,14 @@ export function AnalyticsPage({ sellerSession, theme, onToggleTheme }) {
                     </div>
                   ))}
                 </div>
-                <div className="mt-4 rounded-[16px] border border-[#e9b653] bg-[#fff6e9] p-3 text-[12px] font-bold text-[#6a4a10]">
-                  Peak demand is evening. Keep ready-stock and staff capacity highest from 3-8 PM.
-                </div>
+                {peakAlertVisible && (
+                  <div className="mt-4 flex items-center gap-3 rounded-[16px] border border-[#e9b653] bg-[#fff6e9] p-3 text-[12px] font-bold text-[#6a4a10]">
+                    <p className="min-w-0 flex-1">Peak demand is evening. Keep ready-stock and staff capacity highest from 3-8 PM.</p>
+                    <button className="tap-lift grid h-8 w-8 shrink-0 place-items-center rounded-[11px] border border-[#e9b653] bg-white/70 active:bg-white" type="button" onClick={() => setPeakAlertVisible(false)} aria-label="Dismiss demand alert">
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                )}
               </Panel>
             </section>
 
@@ -345,7 +370,7 @@ function DonutChart({ items }) {
 
   return (
     <div className="grid gap-4 sm:grid-cols-[150px_1fr] sm:items-center">
-      <div className="relative mx-auto h-[150px] w-[150px] rounded-full" style={{ background: `conic-gradient(${gradient})` }}>
+      <div className="relative mx-auto aspect-square w-[150px] shrink-0 rounded-full" style={{ background: `conic-gradient(${gradient})` }}>
         <div className="absolute inset-[26px] grid place-items-center rounded-full bg-white text-center">
           <strong className="text-[18px] font-black">{currency(displayTotal)}</strong>
           <span className="text-[9px] font-black uppercase text-[#647267]">Total mix</span>

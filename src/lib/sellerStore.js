@@ -20,7 +20,7 @@ export const defaultSellerSession = {
     deliveryStatus: 'Active',
   },
   dashboard: {
-    installBannerVisible: true,
+    inventoryWarningVisible: true,
     notificationsEnabled: true,
     lastRefreshedAt: '',
   },
