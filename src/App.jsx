@@ -7,6 +7,7 @@ import { SellerDashboardPage } from './pages/SellerDashboardPage'
 import { MenuProductsPage } from './pages/MenuProductsPage'
 import { OffersPage } from './pages/OffersPage'
 import { CustomersPage } from './pages/CustomersPage'
+import { SettingsPage } from './pages/SettingsPage'
 import { createSellerSession, loadSellerSession, saveSellerSession } from './lib/sellerStore'
 
 const initialForm = {
@@ -188,7 +189,7 @@ function App() {
           <Route path="/analytics" element={<SellerDashboardPage sellerSession={sellerSession} setSellerSession={setSellerSession} activePage="Analytics" theme={theme} onToggleTheme={() => setTheme((current) => (current === 'dark' ? 'light' : 'dark'))} />} />
           <Route path="/ai-insights" element={<SellerDashboardPage sellerSession={sellerSession} setSellerSession={setSellerSession} activePage="Growth" theme={theme} onToggleTheme={() => setTheme((current) => (current === 'dark' ? 'light' : 'dark'))} />} />
           <Route path="/billing" element={<SellerDashboardPage sellerSession={sellerSession} setSellerSession={setSellerSession} activePage="Billing" theme={theme} onToggleTheme={() => setTheme((current) => (current === 'dark' ? 'light' : 'dark'))} />} />
-          <Route path="/settings" element={<SellerDashboardPage sellerSession={sellerSession} setSellerSession={setSellerSession} activePage="Settings" theme={theme} onToggleTheme={() => setTheme((current) => (current === 'dark' ? 'light' : 'dark'))} />} />
+          <Route path="/settings" element={<SettingsPage sellerSession={sellerSession} setSellerSession={setSellerSession} theme={theme} onToggleTheme={() => setTheme((current) => (current === 'dark' ? 'light' : 'dark'))} />} />
           <Route path="/profile" element={<SellerDashboardPage sellerSession={sellerSession} setSellerSession={setSellerSession} activePage="Profile" theme={theme} onToggleTheme={() => setTheme((current) => (current === 'dark' ? 'light' : 'dark'))} />} />
           <Route path="*" element={<Navigate to="/auth" replace />} />
         </Routes>

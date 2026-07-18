@@ -212,86 +212,147 @@ export function ProductForm({ categories, masterProducts, mode, product, onClose
 
   return (
     <div className="fixed inset-0 z-30 grid place-items-end bg-[#11181466] sm:place-items-center">
-      <section className="max-h-[92svh] w-full overflow-auto rounded-t-[24px] bg-[#fbfcf8] p-4 sm:max-w-[720px] sm:rounded-[24px]">
-        <div className="mb-4 flex items-center justify-between">
-          <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.08em] text-[#5b7567]">{mode === 'edit' ? 'Edit Product' : 'Add Product'}</p>
-            <h2 className="text-xl font-black">{mode === 'edit' ? product.master.name : 'Create shop item'}</h2>
+      <section className="ui-enter max-h-[92svh] w-full overflow-auto rounded-t-[28px] bg-[#fbfcf8] shadow-[0_-20px_60px_rgba(17,24,20,0.22)] sm:max-w-[780px] sm:rounded-[28px]">
+        <header className="sticky top-0 z-10 border-b border-[#dde5da] bg-[#fbfcf8]/95 p-4 backdrop-blur">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-3">
+              <span className="icon-chip grid h-12 w-12 shrink-0 place-items-center rounded-[16px] bg-[#edf5ed] text-[#173f2a]">
+                <Boxes className="h-6 w-6" />
+              </span>
+              <div className="min-w-0">
+                <p className="text-[10px] font-black uppercase tracking-[0.08em] text-[#5b7567]">{mode === 'edit' ? 'Edit Product' : 'Add Product'}</p>
+                <h2 className="truncate text-[20px] font-black">{mode === 'edit' ? product.master.name : 'Create shop item'}</h2>
+                <p className="mt-0.5 text-[12px] font-semibold text-[#647267]">Attach catalog data, pricing, and inventory in one clean setup.</p>
+              </div>
+            </div>
+            <button className="tap-lift grid h-11 w-11 shrink-0 place-items-center rounded-[16px] border border-[#dde5da] bg-white active:border-[#efafa3] active:bg-[#fff2ef] active:text-[#b63a25]" type="button" onClick={onClose}><X className="h-4 w-4" /></button>
           </div>
-          <button className="tap-lift grid h-10 w-10 place-items-center rounded-[14px] border border-[#dde5da] bg-white active:border-[#efafa3] active:bg-[#fff2ef] active:text-[#b63a25]" type="button" onClick={onClose}><X className="h-4 w-4" /></button>
-        </div>
+        </header>
 
-        <div className="grid gap-3">
+        <div className="grid gap-4 p-4">
           {mode !== 'edit' && (
-            <>
-              <FieldLike label="Category">
-                <select value={form.categoryId} onChange={(event) => update('categoryId', event.target.value)} className="form-select">
+            <FormSection title="Catalog placement" copy="Choose where this seller product belongs.">
+              <div className="grid gap-3 md:grid-cols-3">
+                <SelectField label="Category" value={form.categoryId} onChange={(value) => update('categoryId', value)}>
                   {categories.map((item) => <option value={item.id} key={item.id}>{item.name}</option>)}
-                </select>
-              </FieldLike>
-              <FieldLike label="Subcategory">
-                <select value={form.subcategory} onChange={(event) => update('subcategory', event.target.value)} className="form-select">
+                </SelectField>
+                <SelectField label="Subcategory" value={form.subcategory} onChange={(value) => update('subcategory', value)}>
                   {(category?.subcategories || []).map((item) => <option value={item} key={item}>{item}</option>)}
-                </select>
-              </FieldLike>
-              <FieldLike label="Master Product">
-                <select value={form.masterProductId} onChange={(event) => update('masterProductId', event.target.value)} className="form-select">
+                </SelectField>
+                <SelectField label="Master Product" value={form.masterProductId} onChange={(value) => update('masterProductId', value)}>
                   <option value="">Add New Product</option>
                   {categoryMasters.map((item) => <option value={item.id} key={item.id}>{item.name}</option>)}
-                </select>
-              </FieldLike>
-            </>
+                </SelectField>
+              </div>
+            </FormSection>
           )}
 
           {!form.masterProductId && mode !== 'edit' && (
-            <>
-              <Input label="Name" value={form.name} onChange={(value) => update('name', value)} />
-              <Input label="Brand optional" value={form.brand} onChange={(value) => update('brand', value)} />
-              <Input label="Description" value={form.description} onChange={(value) => update('description', value)} />
+            <FormSection title="Product identity" copy="Name and describe the item customers will see.">
+              <div className="grid gap-3 md:grid-cols-2">
+                <Input label="Name" value={form.name} onChange={(value) => update('name', value)} placeholder="Basmati Rice 1kg" />
+                <Input label="Brand optional" value={form.brand} onChange={(value) => update('brand', value)} placeholder="Daily Gold" />
+              </div>
+              <Input label="Description" value={form.description} onChange={(value) => update('description', value)} placeholder="Short product details" />
               <ImageUploader />
-            </>
+            </FormSection>
           )}
 
-          <div className="grid grid-cols-2 gap-2">
-            {['Packed', 'Loose'].map((type) => (
-              <button className={`tap-lift rounded-[14px] border p-3 text-[12px] font-black ${form.type === type ? (type === 'Loose' ? 'border-[#77d69c] bg-[#dff8e8] text-[#08783c]' : 'border-[#173f2a] bg-[#edf5ed] text-[#173f2a]') : 'border-[#dde5da] bg-white active:bg-[#f8faf7]'}`} key={type} type="button" onClick={() => update('type', type)}>
-                {type}
-              </button>
-            ))}
-          </div>
+          <FormSection title="Pricing model" copy="Packed items use MRP and SKU, loose items use quantity rules.">
+            <div className="grid grid-cols-2 gap-2">
+              {['Packed', 'Loose'].map((type) => (
+                <button className={`tap-lift rounded-[16px] border p-3 text-left ${form.type === type ? (type === 'Loose' ? 'border-[#77d69c] bg-[#dff8e8] text-[#08783c]' : 'border-[#173f2a] bg-[#edf5ed] text-[#173f2a]') : 'border-[#dde5da] bg-white active:bg-[#f8faf7]'}`} key={type} type="button" onClick={() => update('type', type)}>
+                  <strong className="block text-[13px] font-black">{type}</strong>
+                  <span className="text-[10px] font-bold opacity-75">{type === 'Packed' ? 'Fixed pack / SKU' : 'Sold by unit or weight'}</span>
+                </button>
+              ))}
+            </div>
+            <div className="grid gap-3 md:grid-cols-3">
+              <Input label="Selling Price" value={form.sellingPrice} onChange={(value) => update('sellingPrice', value)} placeholder="110" inputMode="numeric" />
+              {form.type === 'Packed' ? (
+                <>
+                  <Input label="MRP" value={form.mrp} onChange={(value) => update('mrp', value)} placeholder="140" inputMode="numeric" />
+                  <Input label="SKU" value={form.sku} onChange={(value) => update('sku', value)} placeholder="SKU-001" />
+                </>
+              ) : (
+                <>
+                  <Input label="Price Unit" value={form.priceUnit} onChange={(value) => update('priceUnit', value)} placeholder="kg" />
+                  <Input label="Minimum Qty" value={form.minimumOrderQuantity} onChange={(value) => update('minimumOrderQuantity', value)} placeholder="1" inputMode="numeric" />
+                  <Input label="Maximum Qty" value={form.maximumOrderQuantity} onChange={(value) => update('maximumOrderQuantity', value)} placeholder="25" inputMode="numeric" />
+                </>
+              )}
+            </div>
+          </FormSection>
 
-          <Input label="Selling Price" value={form.sellingPrice} onChange={(value) => update('sellingPrice', value)} />
-          {form.type === 'Packed' ? (
-            <>
-              <Input label="MRP" value={form.mrp} onChange={(value) => update('mrp', value)} />
-              <Input label="SKU" value={form.sku} onChange={(value) => update('sku', value)} />
-            </>
-          ) : (
-            <>
-              <Input label="Price Unit" value={form.priceUnit} onChange={(value) => update('priceUnit', value)} />
-              <Input label="Minimum Order Quantity" value={form.minimumOrderQuantity} onChange={(value) => update('minimumOrderQuantity', value)} />
-              <Input label="Maximum Order Quantity" value={form.maximumOrderQuantity} onChange={(value) => update('maximumOrderQuantity', value)} />
-            </>
-          )}
-          <Input label="Inventory Quantity" value={form.inventoryQuantity} onChange={(value) => update('inventoryQuantity', value)} />
-          <Input label="Inventory Unit" value={form.inventoryUnit} onChange={(value) => update('inventoryUnit', value)} />
+          <FormSection title="Inventory" copy="Keep seller stock and units ready for orders.">
+            <div className="grid gap-3 md:grid-cols-2">
+              <Input label="Inventory Quantity" value={form.inventoryQuantity} onChange={(value) => update('inventoryQuantity', value)} placeholder="18" inputMode="numeric" />
+              <Input label="Inventory Unit" value={form.inventoryUnit} onChange={(value) => update('inventoryUnit', value)} placeholder="kg / Piece" />
+            </div>
+          </FormSection>
+        </div>
+
+        <footer className="sticky bottom-0 grid grid-cols-[0.8fr_1.2fr] gap-2 border-t border-[#dde5da] bg-[#fbfcf8]/95 p-4 backdrop-blur">
+          <button className="tap-lift rounded-[16px] border border-[#dde5da] bg-white py-3 text-[13px] font-black active:bg-[#f8faf7]" type="button" onClick={onClose}>
+            Cancel
+          </button>
           <button className="tap-lift min-h-12 rounded-[16px] bg-[#173f2a] text-[13px] font-black text-white active:bg-[#08783c]" type="button" onClick={() => onSave(form)}>
             Save Product
           </button>
-        </div>
+        </footer>
       </section>
     </div>
   )
 }
 
-function FieldLike({ label, children }) {
-  return <label className="grid gap-1 text-[12px] font-black text-[#26342b]">{label}{children}</label>
+function FormSection({ title, copy, children }) {
+  return (
+    <section className="grid gap-3 rounded-[20px] border border-[#dde5da] bg-white p-4 shadow-[0_10px_24px_rgba(23,63,42,0.06)]">
+      <div>
+        <h3 className="text-[13px] font-black text-[#111814]">{title}</h3>
+        <p className="mt-0.5 text-[11px] font-semibold text-[#647267]">{copy}</p>
+      </div>
+      {children}
+    </section>
+  )
 }
 
-function Input({ label, value, onChange }) {
+function FieldLike({ label, children }) {
+  return (
+    <label className="grid gap-1.5">
+      <span className="text-[11px] font-black uppercase tracking-[0.06em] text-[#647267]">{label}</span>
+      {children}
+    </label>
+  )
+}
+
+function Input({ label, value, onChange, placeholder, inputMode }) {
   return (
     <FieldLike label={label}>
-      <input className="h-11 rounded-[14px] border border-[#dde5da] bg-white px-3 text-[13px] font-bold outline-none" value={value} onChange={(event) => onChange(event.target.value)} />
+      <input
+        className="tap-lift h-12 rounded-[15px] border border-[#dde5da] bg-[#fbfcf8] px-3 text-[13px] font-bold text-[#111814] outline-none placeholder:text-[#9aa79d] focus:border-[#173f2a] focus:shadow-[0_0_0_4px_rgba(23,63,42,0.1)]"
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        placeholder={placeholder}
+        inputMode={inputMode}
+      />
+    </FieldLike>
+  )
+}
+
+function SelectField({ label, value, onChange, children }) {
+  return (
+    <FieldLike label={label}>
+      <span className="relative block">
+        <select
+          className="tap-lift h-12 w-full appearance-none rounded-[15px] border border-[#dde5da] bg-[#fbfcf8] px-3 pr-10 text-[13px] font-black text-[#111814] outline-none focus:border-[#173f2a] focus:shadow-[0_0_0_4px_rgba(23,63,42,0.1)]"
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+        >
+          {children}
+        </select>
+        <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#647267]" />
+      </span>
     </FieldLike>
   )
 }

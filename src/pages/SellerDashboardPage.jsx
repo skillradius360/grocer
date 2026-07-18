@@ -93,14 +93,6 @@ export function SellerDashboardPage({ sellerSession, setSellerSession, activePag
       },
     },
     {
-      icon: 'refresh',
-      label: 'Refresh',
-      onClick: () => {
-        updateDashboard({ lastRefreshedAt: new Date().toISOString() })
-        setActionNotice('Dashboard refreshed.')
-      },
-    },
-    {
       icon: 'help',
       label: 'Support',
       onClick: () => navigate('/settings'),
@@ -195,11 +187,14 @@ export function SellerDashboardPage({ sellerSession, setSellerSession, activePag
             onClick={() => updateShop({ shopStatus: shop.shopStatus === 'Open' ? 'Closed' : 'Open', isLive: shop.shopStatus !== 'Open' })}
           />
           <StatusCard
-            title="Menu Session"
-            value={shop.menuSession}
-            tone={statusTone[shop.menuSession]}
-            icon="clock"
-            onClick={() => updateShop({ menuSession: shop.menuSession === 'All Day' ? 'Breakfast' : shop.menuSession === 'Breakfast' ? 'Lunch' : 'All Day' })}
+            title="Refresh"
+            value="Sync Now"
+            tone="amber"
+            icon="refresh"
+            onClick={() => {
+              updateDashboard({ lastRefreshedAt: new Date().toISOString() })
+              setActionNotice('Dashboard refreshed.')
+            }}
           />
           <StatusCard
             title="Delivery"
