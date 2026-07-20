@@ -1,5 +1,5 @@
 import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { AuthPage } from './pages/AuthPage'
 import { OnboardingPage } from './pages/OnboardingPage'
 import { ReadyPage } from './pages/ReadyPage'
@@ -12,7 +12,8 @@ import { CustomersPage } from './pages/CustomersPage'
 import { SettingsPage } from './pages/SettingsPage'
 import { ProfilePage } from './pages/ProfilePage'
 import { BillingPage } from './pages/BillingPage'
-import { createSellerSession, loadSellerSession, saveSellerSession } from './lib/sellerStore'
+import { AppFooter } from './components/AppFooter'
+import { createSellerSession, defaultSellerSession, loadSellerSession, saveSellerSession } from './lib/sellerStore'
 import { decimalOnly, digitsOnly, patterns, validateFieldsByRules } from './utils/validation'
 
 const initialForm = {
@@ -59,8 +60,8 @@ const steps = {
 }
 
 const validationRules = {
-  phone: { required: true, pattern: patterns.phone, message: 'Enter valid phone' },
-  otp: { required: true, pattern: /^[0-9]{4,6}$/, message: 'Enter 4-6 digit OTP' },
+  phone: { required: true, pattern: /^[6-9][0-9]{9}$/, message: 'Enter valid 10 digit phone' },
+  otp: { required: true, pattern: /^[0-9]{6}$/, message: 'Enter 6 digit OTP' },
   shopCode: { required: true, pattern: /^[A-Za-z0-9-]{4,24}$/, message: 'Invalid shop code' },
   shopName: { required: true, pattern: patterns.shopName, message: 'Invalid shop name' },
   ownerName: { required: true, pattern: patterns.alphanumericName, message: 'Invalid owner name' },
@@ -76,7 +77,9 @@ const googleAuthUrl = import.meta.env.VITE_GOOGLE_AUTH_URL || 'https://accounts.
 function App() {
   const navigate = useNavigate()
   const location = useLocation()
+  const appShellRef = useRef(null)
   const isAuthRoute = location.pathname === '/auth'
+  const hasFooter = ['/dashboard', '/orders', '/products', '/customers', '/offers', '/analytics', '/billing', '/settings', '/profile'].includes(location.pathname)
   const [authMode, setAuthMode] = useState('phone')
   const [sellerSession, setSellerSession] = useState(loadSellerSession)
   const [theme, setTheme] = useState(() => window.localStorage.getItem('simplifyliving:theme') || 'light')
@@ -92,6 +95,19 @@ function App() {
   }, [sellerSession])
 
   useEffect(() => {
+    const logout = () => {
+      setSellerSession(defaultSellerSession)
+      setForm(initialForm)
+      setOtpRequested(false)
+      setErrors({})
+      navigate('/auth')
+    }
+
+    window.addEventListener('simplifyliving:logout', logout)
+    return () => window.removeEventListener('simplifyliving:logout', logout)
+  }, [navigate])
+
+  useEffect(() => {
     window.localStorage.setItem('simplifyliving:theme', theme)
     document.body.classList.toggle('theme-dark-orange', theme === 'dark')
 
@@ -100,9 +116,33 @@ function App() {
     }
   }, [theme])
 
+  useEffect(() => {
+    if (!hasFooter || !appShellRef.current) return undefined
+
+    const updateFooterFrame = () => {
+      const rect = appShellRef.current.getBoundingClientRect()
+      document.documentElement.style.setProperty('--seller-footer-left', `${rect.left}px`)
+      document.documentElement.style.setProperty('--seller-footer-width', `${rect.width}px`)
+    }
+
+    updateFooterFrame()
+    window.addEventListener('resize', updateFooterFrame)
+    window.visualViewport?.addEventListener('resize', updateFooterFrame)
+    window.visualViewport?.addEventListener('scroll', updateFooterFrame)
+
+    return () => {
+      window.removeEventListener('resize', updateFooterFrame)
+      window.visualViewport?.removeEventListener('resize', updateFooterFrame)
+      window.visualViewport?.removeEventListener('scroll', updateFooterFrame)
+      document.documentElement.style.removeProperty('--seller-footer-left')
+      document.documentElement.style.removeProperty('--seller-footer-width')
+    }
+  }, [hasFooter, location.pathname])
+
   const updateField = (field) => (event) => {
     const rawValue = event.target.value
     const value = {
+      phone: digitsOnly(rawValue, 10),
       otp: digitsOnly(rawValue, 6),
       pincode: digitsOnly(rawValue, 6),
       latitude: decimalOnly(rawValue, 12),
@@ -162,7 +202,8 @@ function App() {
   return (
     <main className={`${theme === 'dark' ? 'theme-dark-orange' : ''} ${isAuthRoute ? 'fixed inset-0 h-dvh overflow-hidden' : 'min-h-svh'} bg-[#fbfcf8] text-[#111814] md:grid md:place-items-center md:bg-[linear-gradient(135deg,rgba(15,138,75,0.18),transparent_34%),linear-gradient(315deg,rgba(255,176,32,0.18),transparent_30%),linear-gradient(180deg,#f6fbf7,#edf8f0)] md:p-6`}>
       <section
-        className={`${isAuthRoute ? 'h-full overflow-hidden md:h-[calc(100dvh-48px)] md:min-h-0' : 'min-h-svh md:min-h-[min(900px,calc(100svh-48px))]'} w-full bg-[#fbfcf8] md:max-w-[960px] md:overflow-hidden md:rounded-[26px] md:border md:border-[#1f30270f] md:shadow-[0_24px_70px_rgba(22,37,29,0.14)] xl:max-w-[1180px]`}
+        ref={appShellRef}
+        className={`relative ${isAuthRoute ? 'h-full overflow-hidden md:h-[calc(100dvh-48px)] md:min-h-0' : 'min-h-svh md:min-h-[min(900px,calc(100svh-48px))]'} ${hasFooter ? 'seller-app-shell-with-footer' : ''} w-full bg-[#fbfcf8] md:max-w-[960px] md:overflow-hidden md:rounded-[26px] md:border md:border-[#1f30270f] md:shadow-[0_24px_70px_rgba(22,37,29,0.14)] xl:max-w-[1180px]`}
         aria-label="Seller app"
       >
         <Routes>
@@ -237,7 +278,8 @@ function App() {
             element={<SellerDashboardPage sellerSession={sellerSession} setSellerSession={setSellerSession} theme={theme} onToggleTheme={() => setTheme((current) => (current === 'dark' ? 'light' : 'dark'))} />}
           />
           <Route path="/orders" element={<OrdersPage sellerSession={sellerSession} theme={theme} onToggleTheme={() => setTheme((current) => (current === 'dark' ? 'light' : 'dark'))} />} />
-          <Route path="/menu" element={<MenuProductsPage sellerSession={sellerSession} theme={theme} onToggleTheme={() => setTheme((current) => (current === 'dark' ? 'light' : 'dark'))} />} />
+          <Route path="/products" element={<MenuProductsPage sellerSession={sellerSession} theme={theme} onToggleTheme={() => setTheme((current) => (current === 'dark' ? 'light' : 'dark'))} />} />
+          <Route path="/menu" element={<Navigate to="/products" replace />} />
           <Route path="/customers" element={<CustomersPage sellerSession={sellerSession} theme={theme} onToggleTheme={() => setTheme((current) => (current === 'dark' ? 'light' : 'dark'))} />} />
           <Route path="/offers" element={<OffersPage sellerSession={sellerSession} theme={theme} onToggleTheme={() => setTheme((current) => (current === 'dark' ? 'light' : 'dark'))} />} />
           <Route path="/analytics" element={<AnalyticsPage sellerSession={sellerSession} theme={theme} onToggleTheme={() => setTheme((current) => (current === 'dark' ? 'light' : 'dark'))} />} />
@@ -246,6 +288,7 @@ function App() {
           <Route path="/profile" element={<ProfilePage sellerSession={sellerSession} setSellerSession={setSellerSession} theme={theme} onToggleTheme={() => setTheme((current) => (current === 'dark' ? 'light' : 'dark'))} />} />
           <Route path="*" element={<Navigate to="/auth" replace />} />
         </Routes>
+        {hasFooter && <AppFooter />}
       </section>
     </main>
   )

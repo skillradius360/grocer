@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Clock, Save, Store, Truck } from 'lucide-react'
+import { Clock, Save, Truck } from 'lucide-react'
 import { AppHeader } from '../components/AppHeader'
 import { digitsOnly, patterns, validateFieldsByRules } from '../utils/validation'
 
@@ -66,18 +66,6 @@ export function SettingsPage({ sellerSession, setSellerSession, theme, onToggleT
 
       <main className="grid gap-3 px-4 pt-3 md:px-6 md:pt-5">
         <section className="grid gap-3">
-          <div className="rounded-[16px] border border-[#dde5da] bg-white p-2.5 shadow-[0_12px_28px_rgba(23,63,42,0.07)] sm:p-3">
-            <div className="flex items-center gap-2.5 sm:gap-3">
-              <span className="icon-chip grid h-9 w-9 shrink-0 place-items-center rounded-[13px] bg-[#edf5ed] text-[#173f2a] sm:h-10 sm:w-10 sm:rounded-[14px]">
-                <Store className="h-[18px] w-[18px] sm:h-5 sm:w-5" />
-              </span>
-              <div className="min-w-0">
-                <p className="text-[9px] font-black uppercase tracking-[0.08em] text-[#5b7567]">Settings</p>
-                <h1 className="truncate text-[17px] font-black sm:text-[19px]">Shop operations</h1>
-              </div>
-            </div>
-          </div>
-
           <FormPanel icon={Clock} title="Shop operational settings" copy="Timing, availability, delivery controls, and activation state.">
             <div className="grid gap-3 md:grid-cols-2">
               <TextField label="Opening time" value={shopSettings.openingTime} onChange={(value) => updateSetting('openingTime', value)} type="time" />

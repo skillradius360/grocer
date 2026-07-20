@@ -46,7 +46,7 @@ export const seededOffers = [
     title: 'Admin First Order 5%',
     type: 'Percent Off',
     audience: 'All customers',
-    scope: 'All active shop items',
+    scope: 'All active shop products',
     status: 'Active',
     accent: 'amber',
     source: 'Admin',

@@ -1,6 +1,5 @@
-import { useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { LayoutGrid, List, Loader2, Plus } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
+import { LayoutGrid, List, Loader2 } from 'lucide-react'
 import { AppHeader } from '../components/AppHeader'
 import {
   DeleteDialog,
@@ -8,6 +7,7 @@ import {
   InventoryModal,
   MasterListModal,
   ProductCard,
+  ProductFilterModal,
   ProductForm,
   ProductTable,
   StatsCard,
@@ -34,7 +34,6 @@ const defaultFilters = {
 }
 
 export function MenuProductsPage({ sellerSession, theme, onToggleTheme }) {
-  const navigate = useNavigate()
   const [filters, setFilters] = useState(defaultFilters)
   const [viewMode, setViewMode] = useState('grid')
   const [formMode, setFormMode] = useState('')
@@ -43,6 +42,7 @@ export function MenuProductsPage({ sellerSession, theme, onToggleTheme }) {
   const [selectedProduct, setSelectedProduct] = useState(null)
   const [inventoryProduct, setInventoryProduct] = useState(null)
   const [deleteProduct, setDeleteProduct] = useState(null)
+  const [filterModalOpen, setFilterModalOpen] = useState(false)
   const [message, setMessage] = useState('')
 
   const {
@@ -64,6 +64,15 @@ export function MenuProductsPage({ sellerSession, theme, onToggleTheme }) {
 
   const patchFilter = (patch) => setFilters((current) => ({ ...current, ...patch }))
 
+  useEffect(() => {
+    const openAddProduct = (event) => {
+      if (event.detail === '/products') setFormMode('add')
+    }
+
+    window.addEventListener('simplifyliving:footer-add', openAddProduct)
+    return () => window.removeEventListener('simplifyliving:footer-add', openAddProduct)
+  }, [])
+
   const showMessage = (text) => {
     setMessage(text)
     window.setTimeout(() => setMessage(''), 1800)
@@ -80,6 +89,7 @@ export function MenuProductsPage({ sellerSession, theme, onToggleTheme }) {
               sellingPrice: Number(form.sellingPrice),
               mrp: Number(form.mrp || 0),
               inventoryQuantity: Number(form.inventoryQuantity),
+              inventoryUnit: form.type === 'Packed' ? 'Packets' : form.inventoryUnit,
               updatedAt: 'Just now',
             }
           : product
@@ -108,7 +118,7 @@ export function MenuProductsPage({ sellerSession, theme, onToggleTheme }) {
         sellingPrice: Number(form.sellingPrice),
         mrp: Number(form.mrp || 0),
         inventoryQuantity: Number(form.inventoryQuantity),
-        inventoryUnit: form.inventoryUnit,
+        inventoryUnit: form.type === 'Packed' ? 'Packets' : form.inventoryUnit,
         sku: form.sku,
         priceUnit: form.priceUnit,
         minimumOrderQuantity: Number(form.minimumOrderQuantity || 0),
@@ -151,16 +161,6 @@ export function MenuProductsPage({ sellerSession, theme, onToggleTheme }) {
       <AppHeader activePage="Products" sellerSession={sellerSession} theme={theme} onToggleTheme={onToggleTheme} />
 
       <main className="grid gap-3 px-4 pt-3 md:px-6 md:pt-5">
-        <div className="flex items-center justify-between gap-2.5 rounded-[16px] border border-[#dde5da] bg-white p-2.5 shadow-[0_10px_24px_rgba(23,63,42,0.06)]">
-          <div>
-            <p className="text-[9px] font-black uppercase tracking-[0.08em] text-[#5b7567]">Products</p>
-            <h1 className="text-[17px] font-black leading-tight sm:text-[19px]">Product management</h1>
-          </div>
-          <button className="tap-lift inline-flex min-h-10 shrink-0 items-center justify-center gap-1.5 rounded-[13px] bg-[#173f2a] px-3 text-[11px] font-black text-white active:bg-[#08783c] sm:min-h-11 sm:gap-2 sm:rounded-[14px] sm:text-[12px]" type="button" onClick={() => setFormMode('add')}>
-            <Plus className="h-4 w-4" />
-            Add
-          </button>
-        </div>
         <div className="grid grid-cols-5 gap-2">
           <StatsCard label="Total" value={stats.total} tone="blue" />
           <StatsCard label="Active" value={stats.active} />
@@ -169,7 +169,7 @@ export function MenuProductsPage({ sellerSession, theme, onToggleTheme }) {
           <StatsCard label="Hidden" value={stats.hidden} tone="blue" />
         </div>
 
-        <FilterBar categories={categories} filters={filters} onFilter={patchFilter} onOpenMasterList={() => setMasterListOpen(true)} />
+        <FilterBar filters={filters} onFilter={patchFilter} onOpenFilters={() => setFilterModalOpen(true)} onOpenMasterList={() => setMasterListOpen(true)} />
 
         <div className="flex flex-wrap gap-2 rounded-[16px] border border-[#dde5da] bg-white p-3">
           <select className="h-10 flex-1 rounded-[12px] border border-[#dde5da] px-3 text-[12px] font-bold" value={filters.stock} onChange={(event) => patchFilter({ stock: event.target.value })}>
@@ -216,12 +216,16 @@ export function MenuProductsPage({ sellerSession, theme, onToggleTheme }) {
             <section className="grid gap-4">
               {Object.entries(groupedProducts).map(([category, collections]) => (
                 <div className="grid gap-3" key={category}>
-                  <h2 className="text-[13px] font-black uppercase tracking-[0.05em] text-[#647267]">
-                    Category <span className="normal-case tracking-normal text-[#173f2a]">{category}</span>
-                  </h2>
+                  <div className="flex items-center gap-2">
+                    <span className="h-2.5 w-2.5 rounded-full bg-[#173f2a] shadow-[0_0_0_4px_rgba(23,63,42,0.08)]"></span>
+                    <h2 className="truncate text-[15px] font-black text-[#173f2a]">{category}</h2>
+                  </div>
                   {Object.entries(collections).map(([collection, products]) => (
-                    <div key={collection}>
-                      <h3 className="mb-2 text-[12px] font-black uppercase tracking-[0.08em] text-[#173f2a]">Collection <span className="normal-case tracking-normal text-[#111814]">{collection}</span></h3>
+                    <div className="rounded-[18px] border border-white/70 bg-white/70 p-3 shadow-[0_12px_28px_rgba(23,63,42,0.08)]" key={collection}>
+                      <div className="mb-3 flex min-w-0 items-center gap-2">
+                        <span className="h-px w-5 shrink-0 bg-[#b8c8bc]"></span>
+                        <h3 className="truncate text-[13px] font-black text-[#111814]">{collection}</h3>
+                      </div>
                       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                         {products.map((product, index) => (
                           <ProductCard
@@ -286,6 +290,7 @@ export function MenuProductsPage({ sellerSession, theme, onToggleTheme }) {
           }}
         />
       )}
+      {filterModalOpen && <ProductFilterModal categories={categories} filters={filters} onClose={() => setFilterModalOpen(false)} onFilter={patchFilter} />}
       {inventoryProduct && <InventoryModal product={inventoryProduct} onClose={() => setInventoryProduct(null)} onSave={saveInventory} />}
       {deleteProduct && <DeleteDialog product={deleteProduct} onCancel={() => setDeleteProduct(null)} onConfirm={confirmDelete} />}
     </div>

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Field } from '../components/Field'
 import { Icon } from '../components/Icon'
 import { MapPicker } from '../components/MapPicker'
@@ -51,7 +51,7 @@ export function OnboardingPage({
     )
   }
 
-  const searchLocation = async () => {
+  const searchLocation = useCallback(async () => {
     const query = locationQuery.trim()
     if (!query) {
       setLocationMessage('Type an area, landmark, or full address to search.')
@@ -70,7 +70,20 @@ export function OnboardingPage({
     } finally {
       setSearchingLocation(false)
     }
-  }
+  }, [locationQuery])
+
+  useEffect(() => {
+    if (stepIndex !== 1) return undefined
+
+    const query = locationQuery.trim()
+    if (query.length < 3) return undefined
+
+    const timeoutId = window.setTimeout(() => {
+      searchLocation()
+    }, 650)
+
+    return () => window.clearTimeout(timeoutId)
+  }, [locationQuery, searchLocation, stepIndex])
 
   const selectLocationResult = (result) => {
     onFieldValue('address', result.display_name || form.address)
@@ -154,7 +167,7 @@ export function OnboardingPage({
               inputMode="numeric"
               icon="hash"
             />
-            <div className="grid gap-3 rounded-[20px] border border-[#dde5da] bg-white p-3.5 shadow-[0_10px_24px_rgba(23,63,42,0.06)]">
+            <div className="grid gap-3 rounded-[20px] border border-white/70 bg-white p-3.5 shadow-[0_18px_44px_rgba(23,63,42,0.11),0_1px_0_rgba(255,255,255,0.86)_inset]">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <div className="mb-1 flex items-center gap-2 text-[#173f2a]">
@@ -173,26 +186,24 @@ export function OnboardingPage({
                 </button>
               </div>
 
-              <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
+              <div className="grid gap-2">
                 <input
                   className="tap-lift h-12 rounded-[15px] border border-[#dde5da] bg-[#fbfcf8] px-3 text-[13px] font-bold text-[#111814] outline-none placeholder:text-[#9aa79d] focus:border-[#173f2a] focus:shadow-[0_0_0_4px_rgba(23,63,42,0.1)]"
                   value={locationQuery}
-                  onChange={(event) => setLocationQuery(event.target.value)}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter') searchLocation()
+                  onChange={(event) => {
+                    setLocationQuery(event.target.value)
+                    if (event.target.value.trim().length < 3) setLocationResults([])
                   }}
                   placeholder="Search area, landmark, street, city..."
                 />
-                <button className="tap-lift rounded-[15px] border border-[#dde5da] bg-white px-4 text-[12px] font-black text-[#173f2a] active:bg-[#edf5ed]" type="button" onClick={searchLocation} disabled={searchingLocation}>
-                  {searchingLocation ? 'Searching...' : 'Search'}
-                </button>
+                {searchingLocation && <p className="text-[11px] font-bold text-[#647267]">Searching location...</p>}
               </div>
 
               {locationResults.length > 0 && (
                 <div className="grid max-h-[190px] gap-2 overflow-auto rounded-[16px] border border-[#dde5da] bg-[#fbfcf8] p-2">
                   {locationResults.map((result) => (
                     <button
-                      className="tap-lift flex items-start gap-2 rounded-[14px] border border-[#edf1ed] bg-white p-3 text-left active:border-[#173f2a] active:bg-[#edf5ed]"
+                      className="tap-lift flex items-start gap-2 rounded-[14px] border border-[#edf1ed] bg-white p-3 text-left shadow-[0_8px_18px_rgba(23,63,42,0.05)] active:border-[#173f2a] active:bg-[#edf5ed]"
                       key={`${result.place_id}-${result.lat}-${result.lon}`}
                       type="button"
                       onClick={() => selectLocationResult(result)}
@@ -207,41 +218,10 @@ export function OnboardingPage({
                 </div>
               )}
 
-              <div className="grid gap-3 sm:grid-cols-2">
-                <Field
-                  error={errors.latitude}
-                  label="Latitude"
-                  value={form.latitude}
-                  onChange={onFieldChange('latitude')}
-                  placeholder="22.572645"
-                  inputMode="decimal"
-                  icon="pin"
-                />
-                <Field
-                  error={errors.longitude}
-                  label="Longitude"
-                  value={form.longitude}
-                  onChange={onFieldChange('longitude')}
-                  placeholder="88.363892"
-                  inputMode="decimal"
-                  icon="pin"
-                />
-              </div>
-
+              {(errors.latitude || errors.longitude) && <p className="rounded-[14px] border border-[#efafa3] bg-[#fff2ef] px-3 py-2 text-[11px] font-bold text-[#b63a25]">Select a shop pin on the map before continuing.</p>}
               {locationMessage && <p className="rounded-[14px] border border-[#f0c56e] bg-[#fff6e9] px-3 py-2 text-[11px] font-bold text-[#9a6500]">{locationMessage}</p>}
-              {form.latitude && form.longitude ? (
-                <MapPicker latitude={form.latitude} longitude={form.longitude} onChange={updateLocationPoint} />
-              ) : (
-                <div className="grid min-h-[160px] place-items-center rounded-[18px] border border-dashed border-[#b8c5bc] bg-[#f8faf7] p-4 text-center">
-                  <span>
-                    <span className="icon-chip mx-auto mb-2 grid h-11 w-11 place-items-center rounded-[15px] bg-[#edf5ed] text-[#173f2a]">
-                      <Icon name="pin" />
-                    </span>
-                    <strong className="block text-[13px] font-black">No coordinates captured</strong>
-                    <small className="font-semibold text-[#647267]">Use current location, search, or enter latitude and longitude.</small>
-                  </span>
-                </div>
-              )}
+              <MapPicker latitude={form.latitude} longitude={form.longitude} onChange={updateLocationPoint} />
+              {!form.latitude && !form.longitude && <p className="text-[11px] font-semibold text-[#647267]">Showing New Delhi as a map preview. Search, use current location, or tap the map to set your shop pin.</p>}
             </div>
           </>
         )}

@@ -3,16 +3,14 @@ import { useNavigate } from 'react-router-dom'
 import { Icon } from '../components/Icon'
 import { AppHeader } from '../components/AppHeader'
 import {
-  Badge,
   IconButton,
-  NavTile,
   Panel,
-  PipelineCard,
   SectionTitle,
   StatCard,
   StatusCard,
   StockCard,
 } from '../components/dashboard/DashboardComponents'
+import { getShopServiceState } from '../utils/shopState'
 
 const statusTone = {
   Open: 'green',
@@ -39,7 +37,7 @@ export function SellerDashboardPage({ sellerSession, setSellerSession, activePag
 
   const shop = sellerSession.shop
   const dashboard = sellerSession.dashboard
-  const shopName = shop.shopName || 'Fresh Basket Mart'
+  const serviceState = getShopServiceState(sellerSession)
 
   const updateSession = (updater) => {
     setSellerSession((current) => {
@@ -73,22 +71,14 @@ export function SellerDashboardPage({ sellerSession, setSellerSession, activePag
     window.setTimeout(() => setNotice(''), 1800)
   }
 
-  const shareUrl = `${window.location.origin}/menu`
-
-  const quickLinks = [
-    { icon: 'orders', label: 'Orders', path: '/orders' },
-    { icon: 'box', label: 'Products', path: '/menu' },
-    { icon: 'customers', label: 'Customers', path: '/customers' },
-    { icon: 'tag', label: 'Offers', path: '/offers' },
-    { icon: 'settings', label: 'Settings', path: '/settings' },
-  ]
+  const shareUrl = `${window.location.origin}/products`
 
   const copyShareLink = async () => {
     try {
       await navigator.clipboard.writeText(shareUrl)
       setActionNotice('Share link copied.')
     } catch {
-      setActionNotice('Share link ready: /menu')
+      setActionNotice('Share link ready: /products')
     }
   }
 
@@ -114,17 +104,38 @@ export function SellerDashboardPage({ sellerSession, setSellerSession, activePag
           </Panel>
         )}
 
-        <section>
-          <p className="text-[9px] font-black uppercase tracking-[0.08em] text-[#5b7567]">Dashboard</p>
-          <div className="mt-1 flex items-center gap-2">
-            <h1 className="min-w-0 truncate text-[20px] font-black leading-none sm:text-[22px]">{shopName}</h1>
-            <Badge tone={shop.isLive ? 'green' : 'red'}>{shop.isLive ? 'Live' : 'Offline'}</Badge>
-          </div>
-        </section>
-
         {notice && (
           <div className="ui-enter rounded-[14px] border border-[#b8d6c0] bg-[#f0fff5] px-3 py-2 text-[12px] font-bold text-[#173f2a]">
             {notice}
+          </div>
+        )}
+
+        {serviceState.status === 'recharge' && (
+          <div className="flex items-center gap-3 rounded-[16px] border border-[#efafa3] bg-[#fff2ef] p-3 text-[12px] font-semibold text-[#7f2a1b] shadow-[0_14px_28px_rgba(182,58,37,0.12)]">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-[14px] bg-white text-[#b63a25]">
+              <Icon name="wallet" className="h-5 w-5" />
+            </span>
+            <p className="min-w-0 flex-1">
+              <strong className="text-[#111814]">Recharge first</strong> to enable services. Your wallet is below the 1-week payout requirement.
+            </p>
+            <button
+              className="tap-lift shrink-0 rounded-[13px] bg-[#b63a25] px-3 py-2 text-[11px] font-black text-white active:bg-[#8f2d1d]"
+              type="button"
+              onClick={() => navigate('/billing')}
+            >
+              Recharge
+            </button>
+          </div>
+        )}
+
+        {serviceState.status === 'trial' && (
+          <div className="flex items-center gap-3 rounded-[16px] border border-[#f0c56e] bg-[#fff6e9] p-3 text-[12px] font-semibold text-[#7a540c]">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-[14px] bg-white text-[#9a6500]">
+              <Icon name="spark" className="h-5 w-5" />
+            </span>
+            <p className="min-w-0 flex-1">
+              <strong className="text-[#111814]">Trial active.</strong> {serviceState.reason}. Recharge before trial ends to keep services live.
+            </p>
           </div>
         )}
 
@@ -174,7 +185,7 @@ export function SellerDashboardPage({ sellerSession, setSellerSession, activePag
         <Panel className="p-4">
           <SectionTitle title="Share Products" />
           <div className="grid grid-cols-3 gap-2">
-            <IconButton icon="external" label="Open" variant="primary" onClick={() => navigate('/menu')} />
+            <IconButton icon="external" label="Open" variant="primary" onClick={() => navigate('/products')} />
             <IconButton icon="qr" label="QR" onClick={() => setQrVisible((current) => !current)} />
             <IconButton icon="copy" label="Copy" onClick={copyShareLink} />
           </div>
@@ -194,28 +205,6 @@ export function SellerDashboardPage({ sellerSession, setSellerSession, activePag
           <StatCard value="1" label="Total Orders" icon="orders" />
           <StatCard value="0" label="In Prep" icon="chef" />
           <StatCard value="1" label="Completed" icon="check" />
-        </section>
-
-        <Panel className="p-4">
-          <SectionTitle
-            title="Orders Pipeline"
-            action={<button className="tap-lift rounded-[12px] border border-[#dde5da] bg-white px-3 py-2 text-[11px] font-black" type="button" onClick={() => navigate('/orders')}>View all</button>}
-          />
-          <p className="-mt-2 mb-3 text-[11px] font-medium text-[#647267]">0 active in workflow</p>
-          <div className="grid grid-cols-3 gap-2">
-            <PipelineCard count="0" title="New" copy="Needs confirm" tone="blue" />
-            <PipelineCard count="0" title="Preparing" copy="In kitchen" tone="amber" />
-            <PipelineCard count="0" title="Ready" copy="Pickup / delivery" tone="green" />
-          </div>
-        </Panel>
-
-        <section>
-          <SectionTitle title="Quick Links" />
-          <div className="grid grid-cols-5 gap-2">
-            {quickLinks.map((item) => (
-              <NavTile key={item.label} icon={item.icon} label={item.label} onClick={() => navigate(item.path)} />
-            ))}
-          </div>
         </section>
 
         <section className="grid gap-3 sm:grid-cols-2">
@@ -241,7 +230,7 @@ export function SellerDashboardPage({ sellerSession, setSellerSession, activePag
               <StockCard count="10" label="Good" tone="green" />
             </div>
             <div className="mt-4">
-              <IconButton icon="box" label="Manage products" variant="soft" onClick={() => navigate('/menu')} />
+              <IconButton icon="box" label="Manage products" variant="soft" onClick={() => navigate('/products')} />
             </div>
           </Panel>
         </section>

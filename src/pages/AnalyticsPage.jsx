@@ -57,21 +57,12 @@ export function AnalyticsPage({ sellerSession, theme, onToggleTheme }) {
       <AppHeader activePage="Analytics" sellerSession={sellerSession} theme={theme} onToggleTheme={onToggleTheme} />
 
       <main className="grid gap-3 px-4 pt-3 md:px-6 md:pt-5">
-        <Panel className="overflow-hidden p-2.5 sm:p-3">
-          <div className="flex items-start justify-between gap-2.5">
-            <div className="min-w-0">
-              <p className="text-[9px] font-black uppercase tracking-[0.08em] text-[#5b7567]">Analytics</p>
-              <h1 className="mt-0.5 text-[17px] font-black leading-tight sm:text-[21px]">Sales and revenue</h1>
-              <p className="mt-0.5 line-clamp-1 max-w-[560px] text-[10px] font-semibold leading-snug text-[#647267] sm:text-[12px]">
-                Orders, payments, inventory, and buyer trends.
-              </p>
-            </div>
-            <button className={`tap-lift grid h-10 w-10 shrink-0 place-items-center rounded-[13px] border text-[#173f2a] ${filtersOpen ? 'border-[#173f2a] bg-[#edf5ed]' : 'border-[#dde5da] bg-white'}`} type="button" onClick={() => setFiltersOpen((open) => !open)} aria-label="Toggle analytics filters">
-              <Filter className="h-5 w-5" />
-            </button>
-          </div>
+        <div className="grid justify-items-end">
+          <button className={`tap-lift grid h-10 w-10 shrink-0 place-items-center rounded-[13px] border text-[#173f2a] shadow-[0_8px_18px_rgba(23,63,42,0.06)] ${filtersOpen ? 'border-[#173f2a] bg-[#edf5ed]' : 'border-[#dde5da] bg-white'}`} type="button" onClick={() => setFiltersOpen((open) => !open)} aria-label="Toggle analytics filters">
+            <Filter className="h-5 w-5" />
+          </button>
           {filtersOpen && (
-            <div className="mt-2 grid gap-2 rounded-[15px] border border-[#dde5da] bg-white p-2 md:grid-cols-[160px_1fr_1fr]">
+            <div className="mt-2 grid w-full gap-2 rounded-[15px] border border-[#dde5da] bg-white p-2 shadow-[0_10px_24px_rgba(23,63,42,0.06)] md:grid-cols-[160px_1fr_1fr]">
               <select
                 className="h-10 min-w-0 rounded-[12px] border border-[#dde5da] bg-[#fbfcf8] px-3 text-[12px] font-black text-[#111814] outline-none"
                 value={period}
@@ -96,7 +87,7 @@ export function AnalyticsPage({ sellerSession, theme, onToggleTheme }) {
               />
             </div>
           )}
-        </Panel>
+        </div>
 
         {loading || !analytics ? (
           <div className="grid min-h-[320px] place-items-center rounded-[18px] border border-[#dde5da] bg-white">
@@ -114,7 +105,7 @@ export function AnalyticsPage({ sellerSession, theme, onToggleTheme }) {
             </section>
 
             <section className="grid gap-3 xl:grid-cols-[.72fr_1.28fr]">
-              <Panel className="p-4">
+              <Panel className="tap-lift p-4 hover:shadow-[0_24px_44px_rgba(0,0,0,0.18),0_8px_18px_rgba(0,0,0,0.08)]">
                 <SectionTitle title="Business health" action={<Badge tone="green">{analytics.health.score}/100</Badge>} />
                 <div className="grid gap-4 sm:grid-cols-[132px_1fr] sm:items-center">
                   <div className="relative mx-auto grid aspect-square w-[132px] shrink-0 place-items-center rounded-full" style={{ background: `conic-gradient(#173f2a ${analytics.health.score * 3.6}deg, #edf1ed 0deg)` }}>
@@ -132,7 +123,7 @@ export function AnalyticsPage({ sellerSession, theme, onToggleTheme }) {
                 </div>
               </Panel>
 
-              <Panel className="p-4">
+              <Panel className="tap-lift p-4 hover:shadow-[0_24px_44px_rgba(0,0,0,0.18),0_8px_18px_rgba(0,0,0,0.08)]">
                 <SectionTitle title="AI analysis" />
                 <div className="grid gap-3 md:grid-cols-3">
                   {analytics.insights.map((item) => (
@@ -143,7 +134,7 @@ export function AnalyticsPage({ sellerSession, theme, onToggleTheme }) {
             </section>
 
             <section className="grid gap-3 xl:grid-cols-[1.35fr_.65fr]">
-              <Panel className="p-4">
+              <Panel className="tap-lift p-4 hover:shadow-[0_24px_44px_rgba(0,0,0,0.18),0_8px_18px_rgba(0,0,0,0.08)]">
                 <SectionTitle
                   title={`${analytics.label} sale and revenue`}
                   action={<Badge tone="green">Live-ready</Badge>}
@@ -187,7 +178,7 @@ export function AnalyticsPage({ sellerSession, theme, onToggleTheme }) {
                 </div>
               </Panel>
 
-              <Panel className="p-4">
+              <Panel className="tap-lift p-4 hover:shadow-[0_24px_44px_rgba(0,0,0,0.18),0_8px_18px_rgba(0,0,0,0.08)]">
                 <SectionTitle title="Buyer buy time" />
                 <div className="grid gap-3">
                   {analytics.buyerTimes.map((item) => (
@@ -214,16 +205,16 @@ export function AnalyticsPage({ sellerSession, theme, onToggleTheme }) {
             </section>
 
             <section className="grid gap-3 lg:grid-cols-3">
-              <Panel className="p-4">
+              <Panel className="tap-lift p-4 hover:shadow-[0_24px_44px_rgba(0,0,0,0.18),0_8px_18px_rgba(0,0,0,0.08)]">
                 <SectionTitle title="Revenue by category" />
                 <DonutChart items={analytics.categoryMix} />
               </Panel>
 
-              <Panel className="p-4">
+              <Panel className="tap-lift p-4 hover:shadow-[0_24px_44px_rgba(0,0,0,0.18),0_8px_18px_rgba(0,0,0,0.08)]">
                 <SectionTitle title="Repeat buyers" />
                 <div className="grid gap-3">
                   {analytics.repeatBuyerCohorts.map((item) => (
-                    <div className="rounded-[15px] border border-[#dde5da] bg-[#f8faf7] p-3" key={item.label}>
+                    <div className="tap-lift rounded-[15px] border border-[#dde5da] bg-[#f8faf7] p-3 hover:shadow-[0_16px_30px_rgba(0,0,0,0.12)]" key={item.label}>
                       <div className="mb-2 flex items-center justify-between">
                         <strong className="text-[13px] font-black">{item.label}</strong>
                         <span className="text-[12px] font-black text-[#173f2a]">{item.value}%</span>
@@ -236,7 +227,7 @@ export function AnalyticsPage({ sellerSession, theme, onToggleTheme }) {
                 </div>
               </Panel>
 
-              <Panel className="p-4">
+              <Panel className="tap-lift p-4 hover:shadow-[0_24px_44px_rgba(0,0,0,0.18),0_8px_18px_rgba(0,0,0,0.08)]">
                 <SectionTitle title="Loss analysis" />
                 <div className="divide-y divide-[#eef2ee]">
                   {analytics.lossReasons.map((item) => (
@@ -251,7 +242,7 @@ export function AnalyticsPage({ sellerSession, theme, onToggleTheme }) {
 
             <section className="grid gap-3 lg:grid-cols-3">
               {analytics.forecast.map((item) => (
-                <Panel className="p-4" key={item.label}>
+                <Panel className="tap-lift p-4 hover:shadow-[0_24px_44px_rgba(0,0,0,0.18),0_8px_18px_rgba(0,0,0,0.08)]" key={item.label}>
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className="text-[10px] font-black uppercase tracking-[0.08em] text-[#647267]">{item.label}</p>
@@ -266,7 +257,7 @@ export function AnalyticsPage({ sellerSession, theme, onToggleTheme }) {
               ))}
             </section>
 
-            <Panel className="p-4">
+            <Panel className="tap-lift p-4 hover:shadow-[0_24px_44px_rgba(0,0,0,0.18),0_8px_18px_rgba(0,0,0,0.08)]">
               <SectionTitle title="Top selling items" />
               <div className="overflow-hidden rounded-[16px] border border-[#dde5da]">
                 <div className="grid grid-cols-[1.3fr_.6fr_.8fr_.6fr] gap-2 border-b border-[#e6ebe6] bg-[#f8faf7] px-3 py-2 text-[10px] font-black uppercase text-[#647267]">
@@ -302,7 +293,7 @@ function MetricCard({ label, value, tone, icon, delta, negative = false }) {
   const isTrend = delta?.startsWith('+') || delta?.startsWith('-')
 
   return (
-    <div className={`rounded-[18px] border p-3 shadow-[0_10px_24px_rgba(23,63,42,0.06)] ${styles[tone]}`}>
+    <div className={`tap-lift rounded-[18px] border p-3 shadow-[0_10px_24px_rgba(23,63,42,0.06)] hover:shadow-[0_24px_44px_rgba(0,0,0,0.18),0_8px_18px_rgba(0,0,0,0.08)] ${styles[tone]}`}>
       <div className="flex items-start justify-between gap-2">
         <span className="icon-chip grid h-9 w-9 shrink-0 place-items-center rounded-[13px] bg-white text-[#173f2a]">
           <Icon name={icon} className="h-[17px] w-[17px]" />
@@ -340,7 +331,7 @@ function InsightCard({ insight }) {
   }
 
   return (
-    <article className={`rounded-[16px] border p-3 ${styles[insight.tone]}`}>
+    <article className={`tap-lift rounded-[16px] border p-3 hover:shadow-[0_16px_30px_rgba(0,0,0,0.12)] ${styles[insight.tone]}`}>
       <strong className="block text-[13px] font-black leading-snug">{insight.title}</strong>
       <p className="mt-2 text-[11px] font-semibold leading-relaxed text-[#647267]">{insight.detail}</p>
     </article>
@@ -378,7 +369,7 @@ function DonutChart({ items }) {
       </div>
       <div className="grid gap-2">
         {items.map((item) => (
-          <div className="flex items-center justify-between gap-2 rounded-[13px] bg-[#f8faf7] px-3 py-2" key={item.label}>
+          <div className="tap-lift flex items-center justify-between gap-2 rounded-[13px] bg-[#f8faf7] px-3 py-2 hover:shadow-[0_12px_24px_rgba(0,0,0,0.1)]" key={item.label}>
             <Legend color={item.color} label={item.label} />
             <strong className="text-[12px] font-black">{displayTotal ? Math.round((item.revenue / total) * 100) : 0}%</strong>
           </div>

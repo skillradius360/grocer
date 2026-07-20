@@ -1,5 +1,6 @@
 import { Field } from '../components/Field'
 import { Icon } from '../components/Icon'
+import nomadLogo from '../assets/nomad-logo.svg'
 
 const authMethods = [
   {
@@ -23,8 +24,8 @@ export function AuthPage({ authMode, errors, form, onAuthMode, onFieldChange, on
     <div className="ui-enter grid h-full max-h-dvh w-full overflow-hidden bg-[#fbfcf8] lg:grid-cols-[1.02fr_0.98fr]">
       <section className="hidden min-h-full flex-col justify-between bg-[#173f2a] px-10 py-10 text-[#fbfcf8] lg:flex xl:px-12">
         <div>
-          <div className="icon-chip mb-7 grid h-[58px] w-[58px] place-items-center rounded-[18px] bg-white/12 text-[#fbfcf8] shadow-[0_18px_42px_rgba(4,32,20,0.28)]">
-            <Icon name="store" />
+          <div className="icon-chip mb-7 h-[58px] w-[58px] overflow-hidden rounded-[18px] bg-white/12 shadow-[0_18px_42px_rgba(4,32,20,0.28)]">
+            <img src={nomadLogo} alt="Nomad" className="h-full w-full object-cover" />
           </div>
           <p className="mb-3 text-xs font-extrabold uppercase tracking-[0.08em] text-[#d8eadf]">
             Seller Console
@@ -53,8 +54,8 @@ export function AuthPage({ authMode, errors, form, onAuthMode, onFieldChange, on
       <section className="flex h-full min-h-0 items-center justify-center overflow-hidden px-5 py-5 sm:px-8 lg:min-h-full">
         <div className="w-full max-w-[430px]">
           <header className="mb-5 text-left lg:hidden">
-            <div className="icon-chip soft-pulse mb-3 grid h-[50px] w-[50px] place-items-center rounded-[16px] bg-[#173f2a] text-[#f8fbf4] shadow-[0_14px_34px_rgba(23,63,42,0.28)]">
-              <Icon name="store" />
+            <div className="icon-chip soft-pulse mb-3 h-[50px] w-[50px] overflow-hidden rounded-[16px] bg-[#173f2a] shadow-[0_14px_34px_rgba(23,63,42,0.28)]">
+              <img src={nomadLogo} alt="Nomad" className="h-full w-full object-cover" />
             </div>
             <p className="mb-2 text-xs font-extrabold uppercase tracking-[0.08em] text-[#5b7567]">
               Seller Console
@@ -78,7 +79,14 @@ export function AuthPage({ authMode, errors, form, onAuthMode, onFieldChange, on
             type="button"
             onClick={onGoogleContinue}
           >
-            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white text-[15px] font-black text-[#173f2a] shadow-[0_6px_14px_rgba(23,63,42,0.1)]">G</span>
+            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white shadow-[0_6px_14px_rgba(23,63,42,0.1)]">
+              <svg className="h-5 w-5" viewBox="0 0 24 24" aria-hidden="true">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                <path fill="#FBBC05" d="M5.84 14.1c-.22-.66-.35-1.36-.35-2.1s.13-1.44.35-2.1V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l3.66-2.84z" />
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06L5.84 9.9C6.71 7.3 9.14 5.38 12 5.38z" />
+              </svg>
+            </span>
             Continue with Google
           </button>
 
@@ -114,7 +122,7 @@ export function AuthPage({ authMode, errors, form, onAuthMode, onFieldChange, on
               <div className="ui-enter-delayed mx-auto grid w-full gap-3">
                 <label className="grid gap-2">
                   <span className="text-[12px] font-black text-[#647267]">Mobile number</span>
-                  <span className={`flex h-14 overflow-hidden rounded-[16px] border bg-white shadow-[0_10px_24px_rgba(23,63,42,0.05)] focus-within:border-[#173f2a] focus-within:shadow-[0_0_0_4px_rgba(23,63,42,0.1)] ${errors.phone ? 'border-[#d56b56]' : 'border-[#dde5da]'}`}>
+                  <span className={`flex h-14 overflow-hidden rounded-[16px] border bg-white shadow-[0_10px_24px_rgba(23,63,42,0.05)] focus-within:border-[#173f2a] focus-within:shadow-[0_0_0_4px_rgba(23,63,42,0.1)] ${otpRequested ? 'bg-[#f8faf7] opacity-80' : ''} ${errors.phone ? 'border-[#d56b56]' : 'border-[#dde5da]'}`}>
                     <span className="grid w-[64px] place-items-center border-r border-[#e6ebe6] text-[15px] font-black text-[#647267]">+91</span>
                     <input
                       className="min-w-0 flex-1 bg-transparent px-4 text-center text-[17px] font-bold tracking-[0.02em] text-[#111814] outline-none placeholder:text-[#9aa79d]"
@@ -122,6 +130,10 @@ export function AuthPage({ authMode, errors, form, onAuthMode, onFieldChange, on
                       onChange={onFieldChange('phone')}
                       placeholder="9876543210"
                       inputMode="tel"
+                      maxLength={10}
+                      pattern="[0-9]*"
+                      readOnly={otpRequested}
+                      aria-readonly={otpRequested}
                     />
                   </span>
                   {errors.phone && <span className="text-[11px] font-bold text-[#b63a25]">{errors.phone}</span>}
@@ -134,8 +146,10 @@ export function AuthPage({ authMode, errors, form, onAuthMode, onFieldChange, on
                       className={`h-14 rounded-[16px] border bg-white px-4 text-center text-[18px] font-black tracking-[0.16em] text-[#111814] outline-none placeholder:text-[#9aa79d] focus:border-[#173f2a] focus:shadow-[0_0_0_4px_rgba(23,63,42,0.1)] ${errors.otp ? 'border-[#d56b56]' : 'border-[#dde5da]'}`}
                       value={form.otp}
                       onChange={onFieldChange('otp')}
-                      placeholder="0000"
+                      placeholder="000000"
                       inputMode="numeric"
+                      maxLength={6}
+                      pattern="[0-9]*"
                     />
                     {errors.otp && <span className="text-[11px] font-bold text-[#b63a25]">{errors.otp}</span>}
                   </label>

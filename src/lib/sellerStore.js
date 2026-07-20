@@ -1,6 +1,7 @@
 const STORAGE_KEY = 'simplifyliving:seller-session'
 
 export const defaultSellerSession = {
+  createdAt: new Date().toISOString(),
   auth: {
     provider: 'local',
     uid: 'local-seller-demo',
@@ -14,6 +15,7 @@ export const defaultSellerSession = {
     latitude: '',
     longitude: '',
     gst: '',
+    createdAt: new Date().toISOString(),
     isLive: true,
     shopStatus: 'Open',
     menuSession: 'All Day',
@@ -23,6 +25,11 @@ export const defaultSellerSession = {
     inventoryWarningVisible: true,
     notificationsEnabled: true,
     lastRefreshedAt: '',
+  },
+  billing: {
+    walletBalance: 0,
+    weeklyPayoutRequirement: 99,
+    currency: 'INR',
   },
 }
 
@@ -42,6 +49,10 @@ export function loadSellerSession() {
       dashboard: {
         ...defaultSellerSession.dashboard,
         ...parsed.dashboard,
+      },
+      billing: {
+        ...defaultSellerSession.billing,
+        ...parsed.billing,
       },
     }
   } catch {
@@ -80,10 +91,14 @@ export function createSellerSession(form, authMode) {
         updatedAt: new Date().toISOString(),
       },
       gst: form.gst,
+      createdAt: new Date().toISOString(),
     },
     dashboard: {
       ...defaultSellerSession.dashboard,
       lastRefreshedAt: new Date().toISOString(),
+    },
+    billing: {
+      ...defaultSellerSession.billing,
     },
   }
 }

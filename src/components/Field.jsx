@@ -8,7 +8,7 @@ export function Field({ label, value, onChange, placeholder, inputMode, icon, er
         {error && <span className="text-xs font-extrabold text-[#b84a36]">{error}</span>}
       </span>
       <div
-        className={`tap-lift flex h-14 items-center gap-2.5 rounded-2xl border bg-white px-3.5 text-[#6a7b6f] focus-within:border-[#173f2a] focus-within:shadow-[0_0_0_4px_rgba(23,63,42,0.1)] ${
+        className={`tap-lift flex h-14 items-center gap-2.5 rounded-2xl border bg-white px-3.5 text-[#6a7b6f] shadow-[0_8px_20px_rgba(23,63,42,0.06)] focus-within:border-[#173f2a] focus-within:shadow-[0_0_0_4px_rgba(23,63,42,0.1),0_12px_24px_rgba(23,63,42,0.1)] ${
           error ? 'border-[#d56b56] shadow-[0_0_0_3px_rgba(213,107,86,0.12)]' : 'border-[#dde5da]'
         }`}
       >

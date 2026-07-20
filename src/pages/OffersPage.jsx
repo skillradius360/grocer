@@ -9,7 +9,6 @@ import {
   Layers3,
   Plus,
   Sparkles,
-  Tag,
   Target,
   Trash2,
   Users,
@@ -51,6 +50,13 @@ const toneClasses = {
   amber: 'border-[#f0c56e] bg-[#fff6e9] text-[#9a6500]',
   violet: 'border-[#c7b8ff] bg-[#f1edff] text-[#5d43bd]',
   rose: 'border-[#efafa3] bg-[#fff2ef] text-[#b63a25]',
+}
+
+const toneSwatches = {
+  green: { background: '#dff8e8', border: '#77d69c', color: '#08783c' },
+  amber: { background: '#fff1bf', border: '#f0c56e', color: '#9a6500' },
+  violet: { background: '#eee8ff', border: '#c7b8ff', color: '#5d43bd' },
+  rose: { background: '#ffe3df', border: '#efafa3', color: '#b63a25' },
 }
 
 const scopeLabels = {
@@ -172,6 +178,16 @@ export function OffersPage({ sellerSession, theme, onToggleTheme }) {
     setPanelOpen(true)
   }
 
+  useEffect(() => {
+    const openAddOffer = (event) => {
+      if (event.detail !== '/offers') return
+      openNewOffer()
+    }
+
+    window.addEventListener('simplifyliving:footer-add', openAddOffer)
+    return () => window.removeEventListener('simplifyliving:footer-add', openAddOffer)
+  }, [])
+
   const openEditOffer = (offer) => {
     setForm({
       ...defaultOfferForm,
@@ -243,18 +259,6 @@ export function OffersPage({ sellerSession, theme, onToggleTheme }) {
       <AppHeader activePage="Offers" sellerSession={sellerSession} theme={theme} onToggleTheme={onToggleTheme} />
 
       <main className="grid gap-3 px-4 pt-3 max-[240px]:px-2 md:px-6 md:pt-5">
-        <section className="rounded-[16px] border border-[#d8e5d7] bg-white p-2.5 shadow-[0_10px_24px_rgba(23,63,42,0.06)]">
-          <div className="flex items-center gap-2.5 sm:gap-3">
-              <span className="icon-chip grid h-9 w-9 shrink-0 place-items-center rounded-[13px] bg-[#edf5ed] text-[#173f2a] sm:h-10 sm:w-10 sm:rounded-[14px]">
-                <Tag className="h-[17px] w-[17px] sm:h-[18px] sm:w-[18px]" />
-              </span>
-              <div className="min-w-0">
-                <p className="text-[9px] font-black uppercase tracking-[0.08em] text-[#5b7567]">Offers</p>
-                <h2 className="truncate text-[15px] font-black leading-tight text-[#111814] sm:text-[17px]">Offer studio</h2>
-              </div>
-          </div>
-        </section>
-
         <section className="grid grid-cols-3 gap-2">
           <Metric icon={Gift} value={offers.length} label="Offers" tone="green" />
           <Metric icon={Target} value={offers.filter((offer) => offer.status === 'Active').length} label="Active" tone="amber" />
@@ -444,7 +448,7 @@ function OfferFormPanel({
             </span>
           </section>
 
-          <div className="min-w-0 overflow-hidden truncate rounded-[16px] border border-[#dde5da] bg-white px-3 py-2 text-[11px] font-bold text-[#647267]">
+          <div className="hidden">
             <span className="mr-2 rounded-full bg-[#edf5ed] px-2 py-1 text-[9px] font-black text-[#173f2a]">DRAFT</span>
             {summary.title} · {selectedType.title} · {summary.scope}
           </div>
@@ -571,11 +575,25 @@ function OfferFormPanel({
             <div className="grid gap-3">
               <TextInput error={formErrors.badgeText} label="Customer badge text" value={form.badgeText} onChange={(value) => update('badgeText', value)} placeholder="Limited offer" />
               <div className="grid min-w-0 grid-cols-4 gap-2">
-                {['green', 'amber', 'violet', 'rose'].map((tone) => (
-                  <button className={`tap-lift h-14 rounded-[16px] border ${form.theme === tone ? toneClasses[tone] : 'border-[#dde5da] bg-white active:bg-[#f8faf7]'}`} key={tone} type="button" onClick={() => update('theme', tone)} aria-label={`${tone} theme`}>
-                    <Check className={`mx-auto h-5 w-5 ${form.theme === tone ? 'opacity-100' : 'opacity-0'}`} />
-                  </button>
-                ))}
+                {['green', 'amber', 'violet', 'rose'].map((tone) => {
+                  const swatch = toneSwatches[tone]
+                  return (
+                    <button
+                      className="tap-lift grid h-14 place-items-center rounded-[16px] border-2 shadow-[0_10px_20px_rgba(17,24,20,0.08)]"
+                      key={tone}
+                      style={{
+                        backgroundColor: swatch.background,
+                        borderColor: form.theme === tone ? swatch.color : swatch.border,
+                        color: swatch.color,
+                      }}
+                      type="button"
+                      onClick={() => update('theme', tone)}
+                      aria-label={`${tone} theme`}
+                    >
+                      <Check className={`h-5 w-5 ${form.theme === tone ? 'opacity-100' : 'opacity-0'}`} />
+                    </button>
+                  )
+                })}
               </div>
               <div className={`rounded-[22px] border p-4 ${toneClasses[form.theme]}`}>
                 <p className="text-[10px] font-black uppercase tracking-[0.08em]">{form.badgeText || 'Limited offer'}</p>

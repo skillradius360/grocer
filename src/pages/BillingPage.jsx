@@ -4,10 +4,10 @@ import { BadgeIndianRupee, Banknote, CheckCircle2, Clock3, Copy, Filter, IndianR
 import { AppHeader } from '../components/AppHeader'
 import { Badge, Panel, SectionTitle } from '../components/dashboard/DashboardComponents'
 import { getSellerOrders } from '../services/orderService'
+import { getShopServiceState } from '../utils/shopState'
 
 const DUMMY_COMMISSION_RATE = 0.035
 const DUMMY_SERVICE_FEE_RATE = 0.01
-const DUMMY_WALLET_BALANCE = 0
 const DUMMY_UPI_ID = 'simplifyliving@upi'
 const DAY_OPTIONS = [15, 30, 60, 90, 180, 365]
 const AMOUNT_OPTIONS = [49, 99, 149, 249, 499, 999]
@@ -53,7 +53,9 @@ export function BillingPage({ sellerSession, theme, onToggleTheme }) {
   const [billingDate, setBillingDate] = useState('')
   const [billingPage, setBillingPage] = useState(1)
   const commissionRate = DUMMY_COMMISSION_RATE
-  const walletBalance = DUMMY_WALLET_BALANCE
+  const serviceState = getShopServiceState(sellerSession)
+  const walletBalance = serviceState.walletBalance
+  const weeklyPayoutRequirement = serviceState.weeklyPayoutRequirement
   const serviceFeeRate = DUMMY_SERVICE_FEE_RATE
 
   useEffect(() => {
@@ -103,18 +105,6 @@ export function BillingPage({ sellerSession, theme, onToggleTheme }) {
       <AppHeader activePage="Billing" sellerSession={sellerSession} theme={theme} onToggleTheme={onToggleTheme} />
 
       <main className="grid gap-3 px-4 pt-3 md:px-6 md:pt-5">
-        <Panel className="overflow-hidden p-2.5 sm:p-3">
-          <div className="flex items-center justify-between gap-3">
-            <div className="min-w-0">
-              <p className="text-[9px] font-black uppercase tracking-[0.08em] text-[#5b7567]">Billing</p>
-              <h1 className="mt-0.5 text-[17px] font-black leading-tight sm:text-[20px]">Billing</h1>
-            </div>
-            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-[14px] bg-[#edf5ed] text-[#173f2a]">
-              <WalletCards className="h-5 w-5" />
-            </span>
-          </div>
-        </Panel>
-
         {loading ? (
           <div className="grid min-h-[280px] place-items-center rounded-[18px] border border-[#dde5da] bg-white">
             <Loader2 className="h-7 w-7 animate-spin text-[#173f2a]" />
@@ -128,7 +118,7 @@ export function BillingPage({ sellerSession, theme, onToggleTheme }) {
               <BillingStat icon={ShieldCheck} label="Rate" value={`${(commissionRate * 100).toFixed(1)}%`} tone="green" />
             </section>
 
-            <Panel className="p-3">
+              <Panel className="tap-lift p-3 hover:shadow-[0_24px_44px_rgba(0,0,0,0.18),0_8px_18px_rgba(0,0,0,0.08)]">
               <SectionTitle
                 title="Order billing"
                 action={<button className="tap-lift rounded-full border border-[#dde5da] bg-white px-3 py-1.5 text-[10px] font-black text-[#173f2a] active:bg-[#edf5ed]" type="button" onClick={() => setBillingModalOpen(true)}>Show all</button>}
@@ -144,25 +134,26 @@ export function BillingPage({ sellerSession, theme, onToggleTheme }) {
             </Panel>
 
             <section className="grid gap-3">
-              <Panel className="p-4">
-                <SectionTitle title="Platform fee structure" action={<Badge tone="green">Live</Badge>} />
+              <Panel className="tap-lift p-4 hover:shadow-[0_24px_44px_rgba(0,0,0,0.18),0_8px_18px_rgba(0,0,0,0.08)]">
+                <SectionTitle title="Platform fee structure" action={<Badge tone={serviceState.tone}>{serviceState.label}</Badge>} />
                 <div className="mt-3 grid gap-2">
                   <WalletMetric icon={WalletCards} label="Wallet balance" value={money(walletBalance)} copy="available" tone="green" />
+                  <WalletMetric icon={ShieldCheck} label="1 week requirement" value={money(weeklyPayoutRequirement)} copy="minimum service cover" tone="amber" />
                   <WalletMetric icon={Zap} label="Service fee" value={`${(serviceFeeRate * 100).toFixed(0)}%`} copy="of confirmed order value" tone="amber" />
                 </div>
-                <div className="mt-3 rounded-[18px] border border-[#dde5da] bg-[#f8faf7] p-3">
+                <div className="tap-lift mt-3 rounded-[18px] border border-[#dde5da] bg-[#f8faf7] p-3 hover:shadow-[0_16px_30px_rgba(0,0,0,0.12)]">
                   <p className="text-[10px] font-black uppercase tracking-[0.08em] text-[#647267]">Sync billing</p>
                   <div className="mt-2 flex items-center justify-between gap-3">
                     <strong className="text-[13px] font-black">Balance {money(walletBalance)}</strong>
-                    <Badge tone={walletBalance > 0 ? 'green' : 'amber'}>{walletBalance > 0 ? 'Funded' : 'Recharge'}</Badge>
+                    <Badge tone={serviceState.tone}>{serviceState.reason}</Badge>
                   </div>
                 </div>
               </Panel>
 
-              <Panel className="p-4">
+              <Panel className="tap-lift p-4 hover:shadow-[0_24px_44px_rgba(0,0,0,0.18),0_8px_18px_rgba(0,0,0,0.08)]">
                 <SectionTitle title="Recharge wallet" action={<Badge tone="amber">Charge</Badge>} />
                 <div className="mt-3 grid gap-3">
-                  <div className="rounded-[18px] border border-[#dde5da] bg-[#f8faf7] p-3">
+                  <div className="tap-lift rounded-[18px] border border-[#dde5da] bg-[#f8faf7] p-3 hover:shadow-[0_16px_30px_rgba(0,0,0,0.12)]">
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <p className="text-[10px] font-black uppercase tracking-[0.08em] text-[#647267]">Avg usage / day</p>
@@ -205,7 +196,7 @@ export function BillingPage({ sellerSession, theme, onToggleTheme }) {
                     </div>
                   </div>
 
-                  <div className="rounded-[18px] border border-[#9ed7b3] bg-[#f0fff5] p-3">
+                  <div className="tap-lift rounded-[18px] border border-[#9ed7b3] bg-[#f0fff5] p-3 hover:shadow-[0_16px_30px_rgba(0,0,0,0.12)]">
                     <span className="text-[10px] font-black uppercase tracking-[0.08em] text-[#08783c]">Payable amount</span>
                     <div className="mt-1 flex items-end justify-between gap-3">
                       <strong className="text-[26px] font-black leading-none">{payableAmount ? money(payableAmount) : '-'}</strong>
@@ -263,7 +254,7 @@ function BillingStat({ icon: Icon, label, value, tone }) {
   }
 
   return (
-    <div className={`rounded-[18px] border p-3 shadow-[0_10px_24px_rgba(23,63,42,0.06)] ${styles[tone]}`}>
+    <div className={`tap-lift rounded-[18px] border p-3 shadow-[0_10px_24px_rgba(23,63,42,0.06)] hover:shadow-[0_24px_44px_rgba(0,0,0,0.18),0_8px_18px_rgba(0,0,0,0.08)] ${styles[tone]}`}>
       <div className="flex items-start justify-between gap-2">
         <span className="grid h-9 w-9 shrink-0 place-items-center rounded-[13px] bg-white text-[#173f2a]">
           <Icon className="h-[18px] w-[18px]" />
@@ -288,7 +279,7 @@ function EmptyBilling() {
 
 function BillingOrderCard({ bill, className = '' }) {
   return (
-    <article className={`min-w-0 rounded-[14px] border border-[#dde5da] bg-white p-2 shadow-[0_8px_16px_rgba(23,63,42,0.05)] ${className}`}>
+    <article className={`tap-lift min-w-0 rounded-[14px] border border-[#dde5da] bg-white p-2 shadow-[0_8px_16px_rgba(23,63,42,0.05)] hover:shadow-[0_18px_34px_rgba(0,0,0,0.16),0_3px_8px_rgba(0,0,0,0.07)] ${className}`}>
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
@@ -399,7 +390,7 @@ function WalletMetric({ icon: Icon, label, value, copy, tone }) {
   }
 
   return (
-    <div className={`rounded-[18px] border p-3 ${styles[tone]}`}>
+    <div className={`tap-lift rounded-[18px] border p-3 hover:shadow-[0_18px_34px_rgba(0,0,0,0.16),0_3px_8px_rgba(0,0,0,0.07)] ${styles[tone]}`}>
       <div className="flex items-start justify-between gap-3">
         <div>
           <span className="text-[10px] font-black uppercase tracking-[0.08em] text-[#647267]">{label}</span>
@@ -418,7 +409,7 @@ function AmountPill({ label, value, highlight }) {
   const color = highlight === 'green' ? 'text-[#08783c]' : highlight === 'amber' ? 'text-[#9a6500]' : 'text-[#111814]'
 
   return (
-    <div className="min-w-0 rounded-[10px] border border-[#edf1ed] bg-[#f8faf7] px-1.5 py-1.5">
+    <div className="tap-lift min-w-0 rounded-[10px] border border-[#edf1ed] bg-[#f8faf7] px-1.5 py-1.5 hover:shadow-[0_10px_20px_rgba(0,0,0,0.1)]">
       <span className="block text-[8px] font-black uppercase tracking-[0.06em] text-[#647267]">{label}</span>
       <strong className={`mt-0.5 block truncate text-[10px] font-black ${color}`}>{value}</strong>
     </div>

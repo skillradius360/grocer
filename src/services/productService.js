@@ -24,8 +24,8 @@ const masterProducts = [
 ]
 
 const sellerProducts = [
-  { id: 'sp-1', masterProductId: 'mp-1', type: 'Packed', sellingPrice: 1, mrp: 1, inventoryQuantity: 0, inventoryUnit: 'Piece', sku: 'SND-001', availability: 'Out of stock', status: 'Active', updatedAt: 'Today' },
-  { id: 'sp-2', masterProductId: 'mp-2', type: 'Packed', sellingPrice: 7.92, mrp: 12, inventoryQuantity: 3, inventoryUnit: 'Piece', sku: 'TST-002', availability: 'Low stock', status: 'Active', updatedAt: 'Today' },
+  { id: 'sp-1', masterProductId: 'mp-1', type: 'Packed', sellingPrice: 1, mrp: 1, inventoryQuantity: 0, inventoryUnit: 'Packets', sku: 'SND-001', availability: 'Out of stock', status: 'Active', updatedAt: 'Today' },
+  { id: 'sp-2', masterProductId: 'mp-2', type: 'Packed', sellingPrice: 7.92, mrp: 12, inventoryQuantity: 3, inventoryUnit: 'Packets', sku: 'TST-002', availability: 'Low stock', status: 'Active', updatedAt: 'Today' },
   { id: 'sp-3', masterProductId: 'mp-3', type: 'Loose', sellingPrice: 80, priceUnit: 'dozen', inventoryQuantity: 0, inventoryUnit: 'Piece', minimumOrderQuantity: 1, maximumOrderQuantity: 6, availability: 'Out of stock', status: 'Active', updatedAt: 'Yesterday' },
   { id: 'sp-4', masterProductId: 'mp-4', type: 'Loose', sellingPrice: 110, priceUnit: 'kg', inventoryQuantity: 18, inventoryUnit: 'kg', minimumOrderQuantity: 1, maximumOrderQuantity: 25, availability: 'Available', status: 'Hidden', updatedAt: '2 days ago' },
 ]

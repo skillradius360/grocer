@@ -1,20 +1,34 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Moon, Sun } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { Icon } from './Icon'
 import { Badge } from './dashboard/DashboardComponents'
+import { getShopServiceState } from '../utils/shopState'
+import nomadLogo from '../assets/nomad-logo.svg'
 
 const drawerLinks = [
-  { label: 'Dashboard', path: '/dashboard', icon: 'dashboard' },
-  { label: 'Orders', path: '/orders', icon: 'orders' },
-  { label: 'Products', path: '/menu', icon: 'box' },
-  { label: 'Customers', path: '/customers', icon: 'customers' },
-  { label: 'Offers', path: '/offers', icon: 'tag' },
-  { label: 'Analytics', path: '/analytics', icon: 'chart' },
-  { label: 'Billing', path: '/billing', icon: 'wallet' },
-  { label: 'Settings', path: '/settings', icon: 'settings' },
-  { label: 'Profile', path: '/profile', icon: 'user' },
+  { label: 'Dashboard', path: '/dashboard', icon: 'dashboard', tone: 'green' },
+  { label: 'Orders', path: '/orders', icon: 'orders', tone: 'amber' },
+  { label: 'Products', path: '/products', icon: 'box', tone: 'cyan' },
+  { label: 'Customers', path: '/customers', icon: 'customers', tone: 'violet' },
+  { label: 'Offers', path: '/offers', icon: 'tag', tone: 'rose' },
+  { label: 'Analytics', path: '/analytics', icon: 'chart', tone: 'blue' },
+  { label: 'Billing', path: '/billing', icon: 'wallet', tone: 'lime' },
+  { label: 'Settings', path: '/settings', icon: 'settings', tone: 'slate' },
+  { label: 'Profile', path: '/profile', icon: 'user', tone: 'indigo' },
 ]
+
+const iconToneClasses = {
+  green: 'bg-[#dff8e8] text-[#08783c]',
+  amber: 'bg-[#fff1bf] text-[#9a6500]',
+  cyan: 'bg-[#dff7fb] text-[#087c8f]',
+  violet: 'bg-[#eee8ff] text-[#5d43bd]',
+  rose: 'bg-[#ffe3df] text-[#b63a25]',
+  blue: 'bg-[#e4efff] text-[#145ce6]',
+  lime: 'bg-[#e8fbd7] text-[#3f7f17]',
+  slate: 'bg-[#eef2f0] text-[#536258]',
+  indigo: 'bg-[#e9edff] text-[#3447b7]',
+}
 
 export function AppHeader({ sellerSession, activePage, theme, onToggleTheme, notificationsEnabled, onToggleNotifications, leadingAction }) {
   const navigate = useNavigate()
@@ -23,10 +37,8 @@ export function AppHeader({ sellerSession, activePage, theme, onToggleTheme, not
   const shop = sellerSession.shop
   const shopName = shop.shopName || 'Fresh Basket Mart'
   const ownerName = shop.ownerName || 'Seller'
-  const initials = useMemo(
-    () => shopName.split(' ').map((word) => word[0]).join('').slice(0, 2).toUpperCase(),
-    [shopName],
-  )
+  const locationLabel = shop.location?.address || shop.address || 'Location not added'
+  const serviceState = getShopServiceState(sellerSession)
 
   const goTo = (path) => {
     setMenuOpen(false)
@@ -66,7 +78,7 @@ export function AppHeader({ sellerSession, activePage, theme, onToggleTheme, not
         <div className="flex min-w-0 items-center gap-2.5 max-[240px]:gap-1.5">
           {leadingAction ? (
             <button
-              className="tap-lift grid h-9 w-9 shrink-0 place-items-center rounded-full text-[#26342b] hover:bg-[#edf5ed] active:bg-[#edf5ed] active:text-[#173f2a]"
+              className="tap-lift grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#e9edff] text-[#3447b7] shadow-[0_8px_18px_rgba(52,71,183,0.14)] hover:bg-[#edf5ed] active:bg-[#edf5ed] active:text-[#173f2a]"
               type="button"
               aria-label={leadingAction.label}
               onClick={leadingAction.onClick}
@@ -75,7 +87,7 @@ export function AppHeader({ sellerSession, activePage, theme, onToggleTheme, not
             </button>
           ) : (
             <button
-              className="tap-lift grid h-9 w-9 shrink-0 place-items-center rounded-full text-[#26342b] hover:bg-[#edf5ed] active:bg-[#edf5ed] active:text-[#173f2a]"
+              className="tap-lift grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#dff8e8] text-[#08783c] shadow-[0_8px_18px_rgba(8,120,60,0.14)] hover:bg-[#edf5ed] active:bg-[#edf5ed] active:text-[#173f2a]"
               type="button"
               aria-label="Open menu"
               onClick={() => setMenuOpen(true)}
@@ -83,15 +95,17 @@ export function AppHeader({ sellerSession, activePage, theme, onToggleTheme, not
               <Icon name="menu" className="h-[21px] w-[21px]" />
             </button>
           )}
-          <div className="icon-chip grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-[13px] bg-[#173f2a] text-xs font-black text-[#fbfcf8] shadow-[0_12px_24px_rgba(23,63,42,0.2)] max-[240px]:hidden">
-            {initials}
+          <div className="icon-chip h-9 w-9 shrink-0 overflow-hidden rounded-[13px] bg-[#173f2a] shadow-[0_12px_24px_rgba(23,63,42,0.2)] max-[240px]:hidden">
+            <img src={nomadLogo} alt="Nomad" className="h-full w-full object-cover" />
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">
               <strong className="truncate text-[14px] font-black">{shopName}</strong>
-              <Badge tone={shop.isLive ? 'green' : 'red'}>{shop.isLive ? 'Live' : 'Off'}</Badge>
+              <Badge tone={serviceState.tone}>{serviceState.label}</Badge>
             </div>
-            <p className="truncate text-[10px] font-semibold text-[#647267]">{activePage.toLowerCase()}</p>
+            <p className="mt-0.5 inline-flex max-w-full items-center rounded-full bg-[#e8fbd7] px-2 py-0.5 text-[10px] font-black uppercase leading-none tracking-[0.04em] text-[#08783c] shadow-[0_6px_14px_rgba(8,120,60,0.12)]">
+              <span className="truncate">{activePage}</span>
+            </p>
           </div>
         </div>
 
@@ -116,7 +130,7 @@ export function AppHeader({ sellerSession, activePage, theme, onToggleTheme, not
             {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
           </button>
           <button
-            className="tap-lift icon-chip grid h-9 w-9 place-items-center rounded-full bg-[#1d2b21] text-[11px] font-black text-white"
+            className="tap-lift icon-chip grid h-9 w-9 place-items-center rounded-full bg-[#1d2b21] text-[11px] font-black text-white shadow-[0_10px_22px_rgba(23,63,42,0.18)]"
             type="button"
             aria-label="Open shop profile"
             onClick={() => setProfileOpen((current) => !current)}
@@ -127,16 +141,18 @@ export function AppHeader({ sellerSession, activePage, theme, onToggleTheme, not
       </header>
 
       {profileOpen && (
-        <div className="fixed right-4 top-[64px] z-30 w-[min(360px,calc(100vw-32px))] rounded-[22px] border border-[#dde5da] bg-[#fbfcf8] p-4 shadow-[0_24px_60px_rgba(17,24,20,0.24)]">
-          <div className="mb-4 flex items-start justify-between gap-3">
+        <div className="fixed right-4 top-[64px] z-50 w-[min(320px,calc(100vw-32px))] rounded-[22px] border border-[#dde5da] bg-[#fbfcf8] p-4 shadow-[0_24px_60px_rgba(17,24,20,0.24)]">
+          <div className="flex items-start justify-between gap-3">
             <div className="flex min-w-0 items-center gap-3">
-              <div className="icon-chip grid h-[52px] w-[52px] shrink-0 place-items-center rounded-[18px] bg-[#173f2a] text-base font-black text-white">
-                {initials}
+              <div className="icon-chip grid h-[52px] w-[52px] shrink-0 place-items-center rounded-[18px] bg-[linear-gradient(135deg,#dff8e8,#e9edff_55%,#fff1bf)] text-[#173f2a] shadow-[0_12px_26px_rgba(52,71,183,0.16)]">
+                <Icon name="user" className="h-6 w-6" />
               </div>
               <div className="min-w-0">
-                <p className="text-[10px] font-black uppercase tracking-[0.08em] text-[#5b7567]">Current shop</p>
-                <h2 className="truncate text-[17px] font-black">{shopName}</h2>
-                <p className="truncate text-[12px] font-bold text-[#647267]">{shop.address || 'Location not added'}</p>
+                <p className="inline-flex items-center gap-1.5 rounded-full bg-[#dff8e8] px-2 py-1 text-[10px] font-black uppercase tracking-[0.08em] text-[#08783c]">
+                  <Icon name="shield" className="h-3 w-3" />
+                  Owner
+                </p>
+                <h2 className="truncate text-[17px] font-black">{ownerName}</h2>
               </div>
             </div>
             <button className="tap-lift grid h-9 w-9 shrink-0 place-items-center rounded-[13px] border border-[#dde5da] bg-white text-[#26342b] active:bg-[#fff2ef]" type="button" onClick={() => setProfileOpen(false)} aria-label="Close profile">
@@ -144,32 +160,26 @@ export function AppHeader({ sellerSession, activePage, theme, onToggleTheme, not
             </button>
           </div>
 
-          <div className="grid grid-cols-2 gap-2">
-            <ProfilePill label="Owner" value={ownerName} />
-            <ProfilePill label="Phone" value={shop.phone || 'Not added'} />
-            <ProfilePill label="Shop status" value={shop.shopStatus || 'Active'} />
-            <ProfilePill label="Delivery" value={shop.deliveryStatus || 'Active'} />
+          <div className="mt-4 grid gap-2 rounded-[18px] bg-white p-3">
+            <ProfileLine icon="store" label="Shop" value={shopName} tone="green" />
+            <ProfileLine icon="pin" label="Location" value={locationLabel} tone="blue" />
           </div>
 
-          <div className="mt-3 rounded-[16px] border border-[#dde5da] bg-white p-3">
-            <p className="text-[10px] font-black uppercase tracking-[0.08em] text-[#647267]">User session</p>
-            <strong className="mt-1 block truncate text-[13px] font-black">{sellerSession.auth?.provider || 'local'} seller</strong>
-            <span className="mt-0.5 block truncate text-[11px] font-bold text-[#647267]">{sellerSession.auth?.uid || 'local-seller-demo'}</span>
-          </div>
-
-          <div className="mt-3 grid grid-cols-2 gap-2">
-            <button className="tap-lift rounded-[14px] border border-[#dde5da] bg-white py-3 text-[12px] font-black text-[#173f2a] active:bg-[#edf5ed]" type="button" onClick={() => { setProfileOpen(false); navigate('/profile') }}>
-              View profile
-            </button>
-            <button className="tap-lift rounded-[14px] bg-[#173f2a] py-3 text-[12px] font-black text-white active:bg-[#08783c]" type="button" onClick={() => { setProfileOpen(false); navigate('/settings') }}>
-              Settings
-            </button>
-          </div>
+          <button
+            className="tap-lift mt-3 w-full rounded-[15px] bg-[#b63a25] py-3 text-[12px] font-black text-white shadow-[0_14px_28px_rgba(182,58,37,0.22)] active:bg-[#8f2d1d]"
+            type="button"
+            onClick={() => {
+              setProfileOpen(false)
+              window.dispatchEvent(new CustomEvent('simplifyliving:logout'))
+            }}
+          >
+            Logout
+          </button>
         </div>
       )}
 
       {menuOpen && (
-        <div className="fixed inset-0 z-20 h-dvh overflow-hidden bg-[#11181466]" role="presentation" onClick={() => setMenuOpen(false)}>
+        <div className="fixed inset-0 z-40 h-dvh overflow-hidden bg-[#11181466]" role="presentation" onClick={() => setMenuOpen(false)}>
           <aside
             className="ui-enter h-full w-[82%] max-w-[320px] overflow-y-auto overscroll-contain bg-[#fbfcf8] p-4 shadow-[18px_0_50px_rgba(17,24,20,0.22)]"
             aria-label="Seller navigation"
@@ -177,8 +187,8 @@ export function AppHeader({ sellerSession, activePage, theme, onToggleTheme, not
           >
             <div className="mb-5 flex items-center justify-between">
               <div className="flex min-w-0 items-center gap-3">
-                <div className="icon-chip grid h-11 w-11 shrink-0 place-items-center rounded-[15px] bg-[#173f2a] text-sm font-black text-white">
-                  {initials}
+                <div className="icon-chip h-11 w-11 shrink-0 overflow-hidden rounded-[15px] bg-[#173f2a] shadow-[0_12px_24px_rgba(23,63,42,0.2)]">
+                  <img src={nomadLogo} alt="Nomad" className="h-full w-full object-cover" />
                 </div>
                 <div className="min-w-0">
                   <strong className="block truncate text-[15px] font-black">{shopName}</strong>
@@ -209,7 +219,7 @@ export function AppHeader({ sellerSession, activePage, theme, onToggleTheme, not
                     type="button"
                     onClick={() => goTo(link.path)}
                   >
-                    <span className="icon-chip grid h-8 w-8 shrink-0 place-items-center rounded-[11px] bg-[#f3f7f1]">
+                    <span className={`icon-chip grid h-8 w-8 shrink-0 place-items-center rounded-[11px] shadow-[0_8px_18px_rgba(17,24,20,0.08)] ${iconToneClasses[link.tone]}`}>
                       <Icon name={link.icon} className="h-[17px] w-[17px]" />
                     </span>
                     <span className="text-[13px] font-black">{link.label}</span>
@@ -224,11 +234,21 @@ export function AppHeader({ sellerSession, activePage, theme, onToggleTheme, not
   )
 }
 
-function ProfilePill({ label, value }) {
+function ProfileLine({ icon, label, value, tone }) {
+  const tones = {
+    green: 'bg-[#dff8e8] text-[#08783c]',
+    blue: 'bg-[#e4efff] text-[#145ce6]',
+  }
+
   return (
-    <div className="rounded-[14px] bg-white p-3">
-      <span className="block text-[9px] font-black uppercase tracking-[0.06em] text-[#647267]">{label}</span>
-      <strong className="mt-1 block truncate text-[12px] font-black text-[#111814]">{value}</strong>
+    <div className="flex min-w-0 items-center gap-2.5">
+      <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-[11px] shadow-[0_8px_18px_rgba(17,24,20,0.08)] ${tones[tone] || tones.green}`}>
+        <Icon name={icon} className="h-4 w-4" />
+      </span>
+      <span className="min-w-0">
+        <span className="block text-[9px] font-black uppercase tracking-[0.06em] text-[#647267]">{label}</span>
+        <strong className="mt-0.5 block truncate text-[12px] font-black text-[#111814]">{value}</strong>
+      </span>
     </div>
   )
 }

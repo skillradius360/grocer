@@ -1,7 +1,9 @@
 import { useMemo, useState } from 'react'
 import {
+  CalendarDays,
   Clock3,
   Heart,
+  IndianRupee,
   MapPin,
   Phone,
   ReceiptText,
@@ -148,6 +150,22 @@ const customerFilters = [
   { id: 'returns', label: 'Most returns' },
 ]
 
+const customerIconStyles = {
+  orders: 'text-[#f2a300]',
+  spend: 'text-[#16a75a]',
+  since: 'text-[#8d79dc]',
+}
+
+const joinedLabels = {
+  Today: 'Jul 2026',
+  '6 days ago': 'Jul 2026',
+  '2 weeks ago': 'Jul 2026',
+  '3 months ago': 'Apr 2026',
+  '5 months ago': 'Feb 2026',
+  '8 months ago': 'Nov 2025',
+  '1 year ago': 'Jul 2025',
+}
+
 export function CustomersPage({ sellerSession, theme, onToggleTheme }) {
   const [query, setQuery] = useState('')
   const [customerFilter, setCustomerFilter] = useState('all')
@@ -182,16 +200,6 @@ export function CustomersPage({ sellerSession, theme, onToggleTheme }) {
       <AppHeader activePage="Customers" sellerSession={sellerSession} theme={theme} onToggleTheme={onToggleTheme} />
 
       <main className="grid min-w-0 gap-3 px-4 pt-3 md:px-6 md:pt-5">
-        <section className="flex items-center justify-between gap-3 rounded-[16px] border border-[#dde5da] bg-white p-2.5 shadow-[0_10px_24px_rgba(23,63,42,0.06)]">
-          <div className="min-w-0">
-            <p className="text-[9px] font-black uppercase tracking-[0.08em] text-[#5b7567]">Customers</p>
-            <h1 className="truncate text-[17px] font-black leading-tight sm:text-[19px]">Buyer list</h1>
-          </div>
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-[14px] bg-[#edf5ed] text-[14px] font-black text-[#173f2a]">
-            {customers.length}
-          </span>
-        </section>
-
         <label className="flex min-h-12 min-w-0 items-center gap-2 rounded-[16px] border border-[#dde5da] bg-white px-3 text-[#647267] shadow-[0_10px_24px_rgba(23,63,42,0.06)] focus-within:border-[#173f2a]">
           <Search className="h-5 w-5 shrink-0" />
           <input
@@ -219,21 +227,30 @@ export function CustomersPage({ sellerSession, theme, onToggleTheme }) {
           ))}
         </div>
 
-        <section className="grid min-w-0 gap-2 sm:grid-cols-2 xl:grid-cols-3">
+        <section className="grid min-w-0 grid-cols-2 gap-2 min-[520px]:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
           {visibleCustomers.map((customer) => (
             <button
-              className="tap-lift flex min-w-0 items-center gap-3 rounded-[18px] border border-[#dde5da] bg-white p-3 text-left shadow-[0_10px_24px_rgba(23,63,42,0.06)] active:border-[#173f2a] active:bg-[#edf5ed]"
+              className="tap-lift grid min-w-0 gap-2 rounded-[12px] border border-white/90 bg-white p-2 text-left shadow-[0_14px_30px_rgba(0,0,0,0.14),0_2px_7px_rgba(0,0,0,0.06)] active:border-[#173f2a] active:bg-[#edf5ed]"
               key={customer.id}
               type="button"
               onClick={() => setSelectedCustomer(customer)}
             >
-              <span className={`icon-chip grid h-12 w-12 shrink-0 place-items-center rounded-[16px] ${segmentStyles[customer.segment]}`}>
-                <UserRound className="h-6 w-6" />
+              <span className="flex min-w-0 items-start gap-2.5">
+                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-[#d7e4ff] bg-[#edf4ff] text-[12px] font-black text-[#2563eb]">
+                  {customer.name.charAt(0)}
+                </span>
+                <span className="min-w-0 pt-0.5">
+                  <strong className="block min-w-0 truncate text-[12px] font-black leading-tight text-[#111814]">{customer.name}</strong>
+                  <span className={`mt-1 inline-flex max-w-full rounded-full border px-1.5 py-0.5 text-[7px] font-black leading-none ${customer.segment === 'New' ? 'border-[#0c3f91] bg-[#0c3f91] text-white' : segmentStyles[customer.segment]}`}>
+                    {customer.segment.toUpperCase()}
+                  </span>
+                </span>
               </span>
-              <span className="min-w-0 flex-1">
-                <strong className="block truncate text-[14px] font-black text-[#111814]">{customer.name}</strong>
-                <small className="block truncate text-[11px] font-bold text-[#647267]">{customer.phone}</small>
-                <small className="mt-1 block truncate text-[11px] font-semibold text-[#647267]">{customer.area} - {customer.lastOrder}</small>
+
+              <span className="grid min-w-0 gap-1">
+                <CustomerInsight icon={ReceiptText} label="Orders" value={customer.orders} tone="orders" />
+                <CustomerInsight icon={IndianRupee} label="Total" value={`Rs ${customer.spend.toLocaleString('en-IN')}`} tone="spend" />
+                <CustomerInsight icon={CalendarDays} label="Since" value={joinedLabels[customer.joinedAt] || customer.joinedAt} tone="since" muted />
               </span>
             </button>
           ))}
@@ -249,6 +266,17 @@ export function CustomersPage({ sellerSession, theme, onToggleTheme }) {
 
       {selectedCustomer && <CustomerModal customer={selectedCustomer} onClose={() => setSelectedCustomer(null)} />}
     </div>
+  )
+}
+
+function CustomerInsight({ icon: Icon, label, value, tone, muted = false }) {
+  return (
+    <span className="flex min-w-0 items-center gap-1.5">
+      <Icon className={`h-3.5 w-3.5 shrink-0 ${customerIconStyles[tone]}`} />
+      <span className={`min-w-0 truncate text-[12px] font-semibold leading-tight ${muted ? 'text-[#7b887f]' : 'text-[#4c5f55]'}`}>
+        {label}: <strong className="font-black text-[#111814]">{value}</strong>
+      </span>
+    </span>
   )
 }
 

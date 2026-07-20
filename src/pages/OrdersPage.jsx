@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Loader2, MessageCircle, PackageCheck, Phone, Plus, X } from 'lucide-react'
+import { Loader2, MessageCircle, PackageCheck, Phone, X } from 'lucide-react'
 import { AppHeader } from '../components/AppHeader'
 import { Badge, IconButton, Panel, SectionTitle, StatCard } from '../components/dashboard/DashboardComponents'
+import { SearchableSelect } from '../components/products/ProductComponents'
 import { calculateOfferDiscount, getActiveOffers, getOfferBlockReason, offerAppliesToItem } from '../services/offerService'
 import { createBuyerOrder, getOrderCategories, getOrderInventory, getSellerOrders, saveSellerOrders, updateOrderStatus } from '../services/orderService'
 import { digitsOnly, patterns, validateFieldsByRules } from '../utils/validation'
@@ -59,7 +60,6 @@ export function OrdersPage({ sellerSession, theme, onToggleTheme }) {
   const [formErrors, setFormErrors] = useState({})
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(true)
-  const [stockAlertVisible, setStockAlertVisible] = useState(true)
 
   useEffect(() => {
     let active = true
@@ -94,7 +94,14 @@ export function OrdersPage({ sellerSession, theme, onToggleTheme }) {
     completed: orders.filter((order) => order.status === 'Completed').length,
   }), [orders])
 
-  const lowStockItems = inventory.filter((item) => item.quantity <= 5)
+  useEffect(() => {
+    const openAddOrder = (event) => {
+      if (event.detail === '/orders') setFormOpen(true)
+    }
+
+    window.addEventListener('simplifyliving:footer-add', openAddOrder)
+    return () => window.removeEventListener('simplifyliving:footer-add', openAddOrder)
+  }, [])
 
   const showMessage = (text) => {
     setMessage(text)
@@ -113,7 +120,6 @@ export function OrdersPage({ sellerSession, theme, onToggleTheme }) {
     const updatedOrder = await updateOrderStatus(order, nextStatus, patch)
     replaceOrders((current) => current.map((item) => (item.id === order.id ? updatedOrder : item)))
     setSelectedOrder(null)
-    setActiveTab(tabForStatus(updatedOrder.status))
   }
 
   const patchSelectedOrder = async (order, patch = {}) => {
@@ -168,19 +174,6 @@ export function OrdersPage({ sellerSession, theme, onToggleTheme }) {
       <AppHeader activePage="Orders" sellerSession={sellerSession} theme={theme} onToggleTheme={onToggleTheme} />
 
       <main className="grid gap-3 px-4 pt-3 md:px-6 md:pt-5">
-        <Panel className="p-2.5 sm:p-3">
-          <div className="flex items-center justify-between gap-2.5">
-            <div className="min-w-0">
-              <p className="text-[9px] font-black uppercase tracking-[0.08em] text-[#5b7567]">Orders</p>
-              <h1 className="mt-0.5 text-[17px] font-black leading-tight sm:text-[20px]">Order processing</h1>
-            </div>
-            <button className="tap-lift inline-flex min-h-10 shrink-0 items-center justify-center gap-1.5 rounded-[13px] bg-[#173f2a] px-3 text-[11px] font-black text-white active:bg-[#08783c] sm:min-h-11 sm:gap-2 sm:rounded-[14px] sm:text-[12px]" type="button" onClick={() => setFormOpen(true)}>
-              <Plus className="h-4 w-4" />
-              Order
-            </button>
-          </div>
-        </Panel>
-
         <div className="grid grid-cols-4 gap-2">
           <StatCard value={counts.new} label="New" icon="orders" />
           <StatCard value={counts.preparing} label="Preparing" icon="chef" />
@@ -205,17 +198,6 @@ export function OrdersPage({ sellerSession, theme, onToggleTheme }) {
           </div>
         </Panel>
 
-        {stockAlertVisible && lowStockItems.length > 0 && (
-          <div className="flex items-center gap-3 rounded-[15px] border border-[#e9b653] bg-[#fff6e9] p-3 text-[12px] font-semibold text-[#6a4a10]">
-            <p className="min-w-0 flex-1">
-              <strong className="text-[#111814]">{lowStockItems.length} stock alert</strong> after buyer ordering. Items at 0 are drained and should be hidden from future buyer checkout.
-            </p>
-            <button className="tap-lift grid h-8 w-8 shrink-0 place-items-center rounded-[11px] border border-[#e9b653] bg-white/70 text-[#6a4a10] active:bg-white" type="button" onClick={() => setStockAlertVisible(false)} aria-label="Dismiss stock alert">
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-        )}
-
         {loading ? (
           <div className="grid min-h-[180px] place-items-center rounded-[18px] border border-[#dde5da] bg-white">
             <Loader2 className="h-6 w-6 animate-spin text-[#173f2a]" />
@@ -234,18 +216,6 @@ export function OrdersPage({ sellerSession, theme, onToggleTheme }) {
           </section>
         )}
 
-        <Panel className="p-4">
-          <SectionTitle title="Inventory impact" />
-          <div className="grid gap-2 sm:grid-cols-3">
-            {inventory.map((item) => (
-              <div className="rounded-[14px] border border-[#dde5da] bg-[#f8faf7] p-3" key={item.id}>
-                <strong className="block truncate text-[13px] font-black">{item.name}</strong>
-                <p className="mt-1 text-[11px] font-bold text-[#647267]">{item.quantity} {item.unit} left</p>
-                <Badge tone={item.quantity <= 0 ? 'red' : item.quantity <= 5 ? 'amber' : 'green'}>{item.quantity <= 0 ? 'Drained' : item.quantity <= 5 ? 'Low' : 'Available'}</Badge>
-              </div>
-            ))}
-          </div>
-        </Panel>
       </main>
 
       {selectedOrder && (
@@ -501,6 +471,24 @@ function BuyerOrderForm({ activeOffers, categories, errors, form, inventory, onC
       : selectedItem?.quantity <= 5
         ? 'Low stock'
         : 'Available'
+  const categoryOptions = categories.map((category) => ({ value: category.id, label: category.name, meta: `${category.subcategories.length} sub-categories` }))
+  const subcategoryOptions = subcategories.map((subcategory) => ({ value: subcategory, label: subcategory }))
+  const variantSelectOptions = variantOptions.map((item) => ({
+    value: item.id,
+    label: item.name,
+    meta: `${item.variant || 'Default'} - ${item.sellerStatus !== 'Active' ? 'Hidden by seller' : item.quantity > 0 ? `${item.quantity} ${item.unit} left` : 'Out of stock'}`,
+    disabled: item.quantity <= 0 || item.sellerStatus !== 'Active',
+  }))
+  const paymentOptions = ['Cash', 'UPI'].map((item) => ({ value: item, label: item }))
+  const offerOptions = [
+    { value: '', label: 'No offer' },
+    ...applicableOffers.map((offer) => ({
+      value: offer.id,
+      label: offer.title,
+      meta: `${offer.source || 'Seller'} - ${getOfferBlockReason(offer, selectedItem, subtotal) || offer.type}`,
+      disabled: Boolean(getOfferBlockReason(offer, selectedItem, subtotal)),
+    })),
+  ]
 
   const selectCategory = (categoryId) => {
     const category = categories.find((item) => item.id === categoryId)
@@ -550,36 +538,12 @@ function BuyerOrderForm({ activeOffers, categories, errors, form, inventory, onC
 
           <div className="grid gap-3 rounded-[18px] border border-[#dde5da] bg-white p-3">
             <p className="text-[11px] font-black uppercase tracking-[0.06em] text-[#5b7567]">Product selection</p>
-            <div className="grid min-w-0 gap-3 sm:grid-cols-2">
-              <label className="grid gap-1.5">
-                <span className="text-[11px] font-black uppercase tracking-[0.06em] text-[#5b7567]">Category</span>
-                <select className="tap-lift h-12 w-full min-w-0 rounded-[15px] border border-[#dde5da] bg-[#fbfcf8] px-3 text-[13px] font-black text-[#111814] outline-none focus:border-[#173f2a] focus:shadow-[0_0_0_4px_rgba(23,63,42,0.1)]" value={form.categoryId} onChange={(event) => selectCategory(event.target.value)}>
-                  {categories.map((category) => (
-                    <option key={category.id} value={category.id}>{category.name}</option>
-                  ))}
-                </select>
-              </label>
-
-              <label className="grid gap-1.5">
-                <span className="text-[11px] font-black uppercase tracking-[0.06em] text-[#5b7567]">Sub-category</span>
-                <select className="tap-lift h-12 w-full min-w-0 rounded-[15px] border border-[#dde5da] bg-[#fbfcf8] px-3 text-[13px] font-black text-[#111814] outline-none focus:border-[#173f2a] focus:shadow-[0_0_0_4px_rgba(23,63,42,0.1)]" value={form.subcategory} onChange={(event) => selectSubcategory(event.target.value)}>
-                  {subcategories.map((subcategory) => (
-                    <option key={subcategory} value={subcategory}>{subcategory}</option>
-                  ))}
-                </select>
-              </label>
+            <div className="grid min-w-0 items-start gap-3">
+              <SearchableSelect label="Category" value={form.categoryId} options={categoryOptions} onChange={selectCategory} />
+              <SearchableSelect label="Sub-category" value={form.subcategory} options={subcategoryOptions} onChange={selectSubcategory} disabled={!subcategoryOptions.length} />
             </div>
 
-            <label className="grid gap-1.5">
-              <span className="text-[11px] font-black uppercase tracking-[0.06em] text-[#5b7567]">Product variant</span>
-              <select className="tap-lift h-12 w-full min-w-0 rounded-[15px] border border-[#dde5da] bg-[#fbfcf8] px-3 text-[13px] font-black text-[#111814] outline-none focus:border-[#173f2a] focus:shadow-[0_0_0_4px_rgba(23,63,42,0.1)]" value={form.productId} onChange={(event) => onChange({ productId: event.target.value, quantity: 1, offerId: '' })}>
-                {variantOptions.map((item) => (
-                  <option key={item.id} value={item.id} disabled={item.quantity <= 0 || item.sellerStatus !== 'Active'}>
-                    {item.name} - {item.variant || 'Default'} - {item.sellerStatus !== 'Active' ? 'Hidden by seller' : item.quantity > 0 ? `${item.quantity} ${item.unit} left` : 'Out of stock'}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <SearchableSelect label="Product variant" value={form.productId} options={variantSelectOptions} onChange={(productId) => onChange({ productId, quantity: 1, offerId: '' })} disabled={!variantSelectOptions.length} />
 
             {variantOptions.length === 0 && (
               <div className="rounded-[14px] border border-[#efafa3] bg-[#fff2ef] p-3 text-[12px] font-bold text-[#b63a25]">No variants are listed for this sub-category yet.</div>
@@ -603,32 +567,13 @@ function BuyerOrderForm({ activeOffers, categories, errors, form, inventory, onC
             )}
           </div>
 
-          <div className="grid min-w-0 grid-cols-2 gap-3">
+          <div className="grid min-w-0 items-start gap-3 sm:grid-cols-2">
             <FormInput error={errors.quantity} label="Quantity" value={form.quantity} onChange={(value) => onChange({ quantity: Math.min(quantityLimit, Number(digitsOnly(value, 4) || 1)) })} placeholder="1" type="number" min="1" max={quantityLimit} disabled={!selectedItem || selectedItem.quantity <= 0 || selectedItem.sellerStatus !== 'Active'} />
-            <label className="grid gap-1.5">
-              <span className="text-[11px] font-black uppercase tracking-[0.06em] text-[#5b7567]">Payment</span>
-              <select className="tap-lift h-12 w-full min-w-0 rounded-[15px] border border-[#dde5da] bg-white px-3 text-[13px] font-black text-[#111814] outline-none focus:border-[#173f2a] focus:shadow-[0_0_0_4px_rgba(23,63,42,0.1)]" value={form.paymentMethod} onChange={(event) => onChange({ paymentMethod: event.target.value })}>
-                <option>Cash</option>
-                <option>UPI</option>
-              </select>
-            </label>
+            <SearchableSelect label="Payment" value={form.paymentMethod} options={paymentOptions} onChange={(paymentMethod) => onChange({ paymentMethod })} />
           </div>
 
-          <label className="grid gap-1.5 rounded-[18px] border border-[#dde5da] bg-white p-3">
-            <span className="text-[11px] font-black uppercase tracking-[0.06em] text-[#5b7567]">Apply active offer</span>
-            <select
-              className="tap-lift h-12 w-full min-w-0 rounded-[15px] border border-[#dde5da] bg-[#fbfcf8] px-3 text-[13px] font-black text-[#111814] outline-none focus:border-[#173f2a] focus:shadow-[0_0_0_4px_rgba(23,63,42,0.1)]"
-              value={form.offerId}
-              onChange={(event) => onChange({ offerId: event.target.value })}
-              disabled={!selectedItem || applicableOffers.length === 0}
-            >
-              <option value="">No offer</option>
-              {applicableOffers.map((offer) => (
-                <option key={offer.id} value={offer.id} disabled={Boolean(getOfferBlockReason(offer, selectedItem, subtotal))}>
-                  {offer.title} - {offer.source || 'Seller'} - {getOfferBlockReason(offer, selectedItem, subtotal) || offer.type}
-                </option>
-              ))}
-            </select>
+          <div className="grid gap-1.5 rounded-[18px] border border-[#dde5da] bg-white p-3">
+            <SearchableSelect label="Apply active offer" value={form.offerId} options={offerOptions} onChange={(offerId) => onChange({ offerId })} disabled={!selectedItem} />
             <span className="text-[11px] font-semibold text-[#647267]">
               {applicableOffers.length ? `${applicableOffers.length} active offer${applicableOffers.length > 1 ? 's' : ''} available for this item.` : 'No active seller/admin offer applies to this item.'}
             </span>
@@ -637,7 +582,7 @@ function BuyerOrderForm({ activeOffers, categories, errors, form, inventory, onC
                 {selectedOfferReason}
               </span>
             )}
-          </label>
+          </div>
 
           {selectedItem && selectedItem.quantity > 0 && selectedItem.sellerStatus === 'Active' && (
             <div className="grid gap-2 rounded-[16px] border border-[#dde5da] bg-white p-3 text-[12px] font-semibold text-[#647267]">
