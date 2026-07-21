@@ -196,11 +196,11 @@ export function BillingPage({ sellerSession, setSellerSession, theme, onToggleTh
                   <div>
                     <div className="mb-2 flex items-center justify-between">
                       <p className="text-[11px] font-black uppercase tracking-[0.06em] text-[#5b7567]">Recharge for days</p>
-                      <strong className="text-[12px] font-black text-[#173f2a]">{rechargeDays} days</strong>
+                      <strong className="billing-recharge-value text-[12px] font-black text-[#173f2a]">{rechargeDays} days</strong>
                     </div>
                     <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
                       {DAY_OPTIONS.map((days) => (
-                        <button className={`tap-lift min-h-10 rounded-[13px] border text-[12px] font-black ${rechargeMode === 'days' && rechargeDays === days ? 'border-[#173f2a] bg-[#173f2a] text-white' : 'border-[#dde5da] bg-white text-[#334039] active:bg-[#edf5ed]'}`} key={days} type="button" onClick={() => { setRechargeMode('days'); setRechargeDays(days) }}>
+                        <button className={`billing-recharge-option tap-lift min-h-10 rounded-[13px] border text-[12px] font-black ${rechargeMode === 'days' && rechargeDays === days ? 'border-[#173f2a] bg-[#173f2a] text-white' : 'border-[#dde5da] bg-white text-[#334039] active:bg-[#edf5ed]'}`} key={days} type="button" onClick={() => { setRechargeMode('days'); setRechargeDays(days) }}>
                           {days}
                         </button>
                       ))}
@@ -217,7 +217,7 @@ export function BillingPage({ sellerSession, setSellerSession, theme, onToggleTh
                     <p className="mb-2 text-[11px] font-black uppercase tracking-[0.06em] text-[#5b7567]">Select amount</p>
                     <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
                       {AMOUNT_OPTIONS.map((amount) => (
-                        <button className={`tap-lift min-h-11 rounded-[13px] border text-[12px] font-black ${rechargeMode === 'amount' && selectedAmount === amount ? 'border-[#173f2a] bg-[#edf5ed] text-[#173f2a] shadow-[0_8px_18px_rgba(23,63,42,0.12)]' : 'border-[#dde5da] bg-white text-[#334039] active:bg-[#edf5ed]'}`} key={amount} type="button" onClick={() => { setRechargeMode('amount'); setSelectedAmount(amount) }}>
+                        <button className={`billing-recharge-option tap-lift min-h-11 rounded-[13px] border text-[12px] font-black ${rechargeMode === 'amount' && selectedAmount === amount ? 'border-[#173f2a] bg-[#edf5ed] text-[#173f2a] shadow-[0_8px_18px_rgba(23,63,42,0.12)]' : 'border-[#dde5da] bg-white text-[#334039] active:bg-[#edf5ed]'}`} key={amount} type="button" onClick={() => { setRechargeMode('amount'); setSelectedAmount(amount) }}>
                           Rs {amount}
                         </button>
                       ))}
@@ -234,7 +234,7 @@ export function BillingPage({ sellerSession, setSellerSession, theme, onToggleTh
 
                   <label className="tap-lift flex items-center gap-3 rounded-[15px] border border-[#dde5da] bg-white p-3 active:bg-[#f8faf7]">
                     <input className="h-4 w-4 accent-[#173f2a]" type="checkbox" checked={termsAccepted} onChange={(event) => setTermsAccepted(event.target.checked)} />
-                    <span className="text-[12px] font-bold text-[#334039]">Accept Terms & Conditions</span>
+                    <span className="billing-terms-label text-[12px] font-bold text-[#334039]">Accept Terms & Conditions</span>
                   </label>
 
                   <div className="grid gap-2">

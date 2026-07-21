@@ -84,6 +84,20 @@ const defaultOfferForm = {
   theme: 'green',
 }
 
+const FIRST_BUYER_OFFER_ID = 'default-first-buyer-10'
+const FIRST_BUYER_STORAGE_KEY = 'simplifyliving:first-buyer-offer-enabled'
+
+const firstBuyerOffer = {
+  id: FIRST_BUYER_OFFER_ID,
+  title: 'First buyer welcome',
+  type: '10% off',
+  audience: 'New customers',
+  scope: 'All shop items',
+  accent: 'amber',
+  source: 'Default',
+  protected: true,
+}
+
 function createOfferSummary(form, products, categories) {
   const productNames = products
     .filter((product) => form.productIds.includes(product.id))
@@ -114,6 +128,7 @@ export function OffersPage({ sellerSession, theme, onToggleTheme }) {
   const [pendingDeleteId, setPendingDeleteId] = useState('')
   const [stepIndex, setStepIndex] = useState(0)
   const [offers, setOffers] = useState(seededOffers)
+  const [firstBuyerEnabled, setFirstBuyerEnabled] = useState(() => window.localStorage.getItem(FIRST_BUYER_STORAGE_KEY) === 'true')
   const [form, setForm] = useState(defaultOfferForm)
   const [formErrors, setFormErrors] = useState({})
   const [ruleNoticeVisible, setRuleNoticeVisible] = useState(true)
@@ -241,6 +256,8 @@ export function OffersPage({ sellerSession, theme, onToggleTheme }) {
   }
 
   const deleteOffer = (offerId) => {
+    if (offerId === FIRST_BUYER_OFFER_ID) return
+
     replaceOffers((current) => {
       const nextOffers = current.filter((offer) => offer.id !== offerId)
       if (activeOfferId === offerId) {
@@ -252,7 +269,20 @@ export function OffersPage({ sellerSession, theme, onToggleTheme }) {
   }
 
   const steps = ['Basics', 'Scope', 'Rules', 'Audience', 'Visual']
-  const activeOffer = offers.find((offer) => offer.id === activeOfferId) || offers[0]
+  const protectedFirstBuyerOffer = {
+    ...firstBuyerOffer,
+    status: firstBuyerEnabled ? 'Active' : 'Default',
+  }
+  const visibleOffers = [protectedFirstBuyerOffer, ...offers]
+  const activeOffer = visibleOffers.find((offer) => offer.id === activeOfferId) || visibleOffers[0]
+
+  const toggleFirstBuyerOffer = (event) => {
+    event.stopPropagation()
+    const nextValue = !firstBuyerEnabled
+    setFirstBuyerEnabled(nextValue)
+    window.localStorage.setItem(FIRST_BUYER_STORAGE_KEY, String(nextValue))
+    setActiveOfferId(FIRST_BUYER_OFFER_ID)
+  }
 
   return (
     <div className="ui-enter min-h-svh bg-[#f4f7f3] pb-5 text-[#111814] sm:min-h-[820px]">
@@ -260,8 +290,8 @@ export function OffersPage({ sellerSession, theme, onToggleTheme }) {
 
       <main className="grid gap-3 px-4 pt-3 max-[240px]:px-2 md:px-6 md:pt-5">
         <section className="grid grid-cols-3 gap-2">
-          <Metric icon={Gift} value={offers.length} label="Offers" tone="green" />
-          <Metric icon={Target} value={offers.filter((offer) => offer.status === 'Active').length} label="Active" tone="amber" />
+          <Metric icon={Gift} value={offers.length + 1} label="Offers" tone="green" />
+          <Metric icon={Target} value={offers.filter((offer) => offer.status === 'Active').length + (firstBuyerEnabled ? 1 : 0)} label="Active" tone="amber" />
           <Metric icon={Users} value="4" label="Audiences" tone="violet" />
         </section>
 
@@ -270,12 +300,19 @@ export function OffersPage({ sellerSession, theme, onToggleTheme }) {
             <h2 className="text-[11px] font-black uppercase tracking-[0.08em] text-[#5b7567]">Live offers</h2>
             <button className="tap-lift shrink-0 rounded-[12px] border border-[#dde5da] bg-white px-3 py-2 text-[11px] font-black active:bg-[#edf5ed] max-[240px]:px-2 max-[240px]:text-[10px]" type="button" onClick={openNewOffer}>New offer</button>
           </div>
-          {offers.map((offer) => (
-            <button
+          {visibleOffers.map((offer) => (
+            <div
               className={`tap-lift flex min-w-0 items-center gap-3 rounded-[18px] border bg-white p-3 text-left shadow-[0_10px_24px_rgba(23,63,42,0.06)] max-[240px]:gap-2 max-[240px]:p-2 ${activeOfferId === offer.id ? toneClasses[offer.accent] : 'border-[#dde5da] active:bg-[#f8faf7]'}`}
               key={offer.id}
-              type="button"
+              role="button"
+              tabIndex={0}
               onClick={() => setActiveOfferId(offer.id)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault()
+                  setActiveOfferId(offer.id)
+                }
+              }}
             >
               <span className={`icon-chip grid h-11 w-11 shrink-0 place-items-center rounded-[15px] max-[240px]:h-8 max-[240px]:w-8 max-[240px]:rounded-[11px] ${toneClasses[offer.accent]}`}>
                 <BadgePercent className="h-5 w-5" />
@@ -284,8 +321,15 @@ export function OffersPage({ sellerSession, theme, onToggleTheme }) {
                 <strong className="block truncate text-[14px] font-black text-[#111814]">{offer.title}</strong>
                 <small className="block truncate text-[11px] font-bold text-[#647267]">{offer.type} · {offer.scope}</small>
               </span>
-              <span className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-black max-[240px]:px-1.5 max-[240px]:text-[9px] ${offer.status === 'Active' ? 'bg-[#dff8e8] text-[#08783c]' : 'bg-[#fff6e9] text-[#9a6500]'}`}>{offer.status}</span>
-            </button>
+              {offer.protected ? (
+                <span className="flex shrink-0 items-center gap-2">
+                  <span className={`rounded-full px-2 py-1 text-[10px] font-black max-[240px]:px-1.5 max-[240px]:text-[9px] ${firstBuyerEnabled ? 'bg-[#dff8e8] text-[#08783c]' : 'bg-[#fff6e9] text-[#9a6500]'}`}>{firstBuyerEnabled ? 'Active' : 'Default'}</span>
+                  <input className="h-4 w-4 accent-[#173f2a]" checked={firstBuyerEnabled} type="checkbox" onChange={toggleFirstBuyerOffer} onClick={(event) => event.stopPropagation()} aria-label="Apply 10% first buyer offer" />
+                </span>
+              ) : (
+                <span className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-black max-[240px]:px-1.5 max-[240px]:text-[9px] ${offer.status === 'Active' ? 'bg-[#dff8e8] text-[#08783c]' : 'bg-[#fff6e9] text-[#9a6500]'}`}>{offer.status}</span>
+              )}
+            </div>
           ))}
         </section>
 
@@ -307,20 +351,32 @@ export function OffersPage({ sellerSession, theme, onToggleTheme }) {
               <InfoPill label="Status" value={activeOffer.status} />
             </div>
             <div className="mt-3 grid grid-cols-2 gap-2 max-[240px]:grid-cols-1">
-              <button className="tap-lift inline-flex min-h-11 min-w-0 items-center justify-center gap-2 rounded-[14px] border border-[#dde5da] bg-white px-2 text-[12px] font-black text-[#173f2a] active:bg-[#edf5ed]" type="button" onClick={() => openEditOffer(activeOffer)}>
-                <Edit3 className="h-4 w-4" />
-                Edit offer
-              </button>
-              {pendingDeleteId === activeOffer.id ? (
-                <button className="tap-lift inline-flex min-h-11 min-w-0 items-center justify-center gap-2 rounded-[14px] bg-[#b63a25] px-2 text-[12px] font-black text-white active:bg-[#8f2d1d]" type="button" onClick={() => deleteOffer(activeOffer.id)}>
-                  <Trash2 className="h-4 w-4" />
-                  Confirm delete
-                </button>
+              {activeOffer.protected ? (
+                <label className="tap-lift col-span-2 flex min-h-12 items-center justify-between gap-3 rounded-[15px] border border-[#f0c56e] bg-[#fff6e9] px-3 py-2 text-[12px] font-bold text-[#7a540c] active:bg-[#fff8e6] max-[240px]:col-span-1">
+                  <span className="min-w-0">
+                    <strong className="block text-[13px] font-black">Apply 10% to new buyers</strong>
+                    <small className="block text-[11px] font-bold">Default shop offer. Editing and deletion are locked.</small>
+                  </span>
+                  <input className="h-4 w-4 shrink-0 accent-[#173f2a]" checked={firstBuyerEnabled} type="checkbox" onChange={toggleFirstBuyerOffer} />
+                </label>
               ) : (
-                <button className="tap-lift inline-flex min-h-11 min-w-0 items-center justify-center gap-2 rounded-[14px] border border-[#efafa3] bg-white px-2 text-[12px] font-black text-[#b63a25] active:bg-[#fff2ef]" type="button" onClick={() => setPendingDeleteId(activeOffer.id)}>
-                  <Trash2 className="h-4 w-4" />
-                  Delete offer
-                </button>
+                <>
+                  <button className="tap-lift inline-flex min-h-11 min-w-0 items-center justify-center gap-2 rounded-[14px] border border-[#dde5da] bg-white px-2 text-[12px] font-black text-[#173f2a] active:bg-[#edf5ed]" type="button" onClick={() => openEditOffer(activeOffer)}>
+                    <Edit3 className="h-4 w-4" />
+                    Edit offer
+                  </button>
+                  {pendingDeleteId === activeOffer.id ? (
+                    <button className="tap-lift inline-flex min-h-11 min-w-0 items-center justify-center gap-2 rounded-[14px] bg-[#b63a25] px-2 text-[12px] font-black text-white active:bg-[#8f2d1d]" type="button" onClick={() => deleteOffer(activeOffer.id)}>
+                      <Trash2 className="h-4 w-4" />
+                      Confirm delete
+                    </button>
+                  ) : (
+                    <button className="tap-lift inline-flex min-h-11 min-w-0 items-center justify-center gap-2 rounded-[14px] border border-[#efafa3] bg-white px-2 text-[12px] font-black text-[#b63a25] active:bg-[#fff2ef]" type="button" onClick={() => setPendingDeleteId(activeOffer.id)}>
+                      <Trash2 className="h-4 w-4" />
+                      Delete offer
+                    </button>
+                  )}
+                </>
               )}
             </div>
           </section>
