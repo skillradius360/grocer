@@ -129,10 +129,12 @@
   }
 
   .seller-app-shell-with-footer > .ui-enter {
-    padding-bottom: calc(6.25rem + env(safe-area-inset-bottom)) !important;
+    padding-bottom: calc(7rem + env(safe-area-inset-bottom)) !important;
   }
 
   .seller-app-footer {
+    isolation: isolate;
+    transform: translateZ(0);
     background:
       linear-gradient(135deg, rgba(255, 255, 255, 0.54), rgba(246, 251, 247, 0.28)),
       rgba(251, 252, 248, 0.34) !important;
@@ -146,14 +148,12 @@
 
   .seller-footer-nav {
     display: grid !important;
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
   }
 
-  .seller-footer-nav-standard {
-    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-  }
-
-  .seller-footer-nav-add {
-    grid-template-columns: repeat(2, minmax(0, 1fr)) 58px repeat(2, minmax(0, 1fr)) !important;
+  .seller-footer-quick-menu {
+    -webkit-backdrop-filter: blur(24px) saturate(1.35);
+    backdrop-filter: blur(24px) saturate(1.35);
   }
 
   .theme-dark-orange .seller-app-footer {
@@ -636,12 +636,12 @@
   }
 
   .seller-footer-add-button {
-    width: 58px !important;
-    min-width: 58px !important;
-    max-width: 58px !important;
-    height: 58px !important;
-    min-height: 58px !important;
-    max-height: 58px !important;
+    width: 56px !important;
+    min-width: 56px !important;
+    max-width: 56px !important;
+    height: 56px !important;
+    min-height: 56px !important;
+    max-height: 56px !important;
     border-radius: 9999px !important;
   }
 
@@ -769,6 +769,27 @@
     grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
   }
 
+  .seller-footer-nav {
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  }
+
+  .seller-footer-nav button {
+    min-height: 52px !important;
+    border-radius: 13px !important;
+    padding-left: 0.125rem !important;
+    padding-right: 0.125rem !important;
+  }
+
+  .seller-footer-nav button > span:first-child {
+    height: 24px !important;
+    width: 24px !important;
+    border-radius: 8px !important;
+  }
+
+  .seller-footer-nav button > span:last-child {
+    font-size: 9px !important;
+  }
+
   [class*="grid-cols-4"] {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
@@ -846,6 +867,19 @@
 
   [class*="grid-cols-3"] {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .seller-footer-nav {
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    gap: 0.0625rem !important;
+  }
+
+  .seller-footer-nav button {
+    min-height: 50px !important;
+  }
+
+  .seller-footer-nav button > span:last-child {
+    font-size: 8px !important;
   }
 
   [class*="min-h-[68px]"],
