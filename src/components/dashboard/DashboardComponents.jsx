@@ -145,7 +145,7 @@ export function StockCard({ count, label, tone }) {
   }
 
   return (
-    <div className={`tap-lift grid min-h-[52px] place-items-center rounded-[13px] border px-2 text-center shadow-[0_8px_18px_rgba(23,63,42,0.06)] ${tones[tone]}`}>
+    <div className={`stock-card stock-card-${tone} tap-lift grid min-h-[52px] place-items-center rounded-[13px] border px-2 text-center shadow-[0_8px_18px_rgba(23,63,42,0.06)] ${tones[tone]}`}>
       <strong className="text-[18px] font-black leading-none text-[#101814]">{count}</strong>
       <span className="text-[9px] font-black uppercase tracking-[0.05em] text-[#667369]">{label}</span>
     </div>

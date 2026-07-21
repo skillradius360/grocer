@@ -211,9 +211,9 @@ export function SellerDashboardPage({ sellerSession, setSellerSession, activePag
           <Panel className="p-4">
             <SectionTitle title="Promotions" />
             <div className="grid grid-cols-3 gap-2">
-              <div><strong className="block text-lg font-black">0</strong><span className="text-[9px] font-black uppercase text-[#647267]">Active</span></div>
-              <div><strong className="block text-lg font-black">0</strong><span className="text-[9px] font-black uppercase text-[#647267]">Claims</span></div>
-              <div><strong className="block text-lg font-black">Rs 0</strong><span className="text-[9px] font-black uppercase text-[#647267]">Savings</span></div>
+              <PromotionCard value="0" label="Active" tone="green" />
+              <PromotionCard value="0" label="Claims" tone="amber" />
+              <PromotionCard value="Rs 0" label="Savings" tone="violet" />
             </div>
             <div className="mt-4 flex gap-2">
               <IconButton icon="plus" label="Create offer" onClick={() => navigate('/offers')} />
@@ -247,6 +247,21 @@ export function SellerDashboardPage({ sellerSession, setSellerSession, activePag
           </div>
         </Panel>
       </div>
+    </div>
+  )
+}
+
+function PromotionCard({ value, label, tone }) {
+  const tones = {
+    green: 'border-[#77d69c] bg-[#dff8e8] text-[#08783c]',
+    amber: 'border-[#f0c56e] bg-[#fff6e9] text-[#9a6500]',
+    violet: 'border-[#c7b8ff] bg-[#f1edff] text-[#5d43bd]',
+  }
+
+  return (
+    <div className={`tap-lift grid min-h-[62px] place-items-center rounded-[13px] border px-2 text-center shadow-[0_8px_18px_rgba(23,63,42,0.06)] ${tones[tone]}`}>
+      <strong className="text-[18px] font-black leading-none">{value}</strong>
+      <span className="text-[9px] font-black uppercase tracking-[0.05em]">{label}</span>
     </div>
   )
 }

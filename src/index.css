@@ -352,6 +352,19 @@
     color: #ffffff !important;
   }
 
+  .theme-dark-orange .stock-card-medium,
+  .theme-dark-orange .stock-card-peach {
+    background: rgba(249, 115, 22, 0.22) !important;
+    border-color: rgba(251, 146, 60, 0.62) !important;
+  }
+
+  .theme-dark-orange .stock-card-medium strong,
+  .theme-dark-orange .stock-card-medium span,
+  .theme-dark-orange .stock-card-peach strong,
+  .theme-dark-orange .stock-card-peach span {
+    color: #ffffff !important;
+  }
+
   [class*="bg-[#fbfcf8]"],
   [class*="bg-[#f4f7f3]"],
   [class*="bg-[#f3f6f4]"],
