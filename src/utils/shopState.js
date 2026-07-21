@@ -21,8 +21,9 @@ export function getShopServiceState(sellerSession) {
   const walletBalance = numberOrZero(billing.walletBalance)
   const weeklyPayoutRequirement = numberOrZero(billing.weeklyPayoutRequirement || billing.weeklyServiceRequirement)
   const hasLowBalance = weeklyPayoutRequirement > 0 && walletBalance < weeklyPayoutRequirement
+  const hasServiceBalance = weeklyPayoutRequirement <= 0 || walletBalance >= weeklyPayoutRequirement
 
-  if (joinedDays < TRIAL_DAYS) {
+  if (joinedDays < TRIAL_DAYS && !hasServiceBalance) {
     return {
       status: 'trial',
       label: 'Trial',

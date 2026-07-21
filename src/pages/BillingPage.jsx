@@ -39,9 +39,10 @@ function billForOrder(order, commissionRate) {
   }
 }
 
-export function BillingPage({ sellerSession, theme, onToggleTheme }) {
+export function BillingPage({ sellerSession, setSellerSession, theme, onToggleTheme }) {
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
+  const [rechargeMode, setRechargeMode] = useState('days')
   const [rechargeDays, setRechargeDays] = useState(30)
   const [selectedAmount, setSelectedAmount] = useState(99)
   const [termsAccepted, setTermsAccepted] = useState(false)
@@ -86,9 +87,36 @@ export function BillingPage({ sellerSession, theme, onToggleTheme }) {
     net: sum.net + bill.net,
   }), { revenue: 0, fees: 0, net: 0 }), [bills])
 
-  const payableAmount = selectedAmount || 0
+  const billableDayCount = useMemo(() => {
+    const days = new Set(bills.map((bill) => new Date(billDateValue(bill)).toISOString().slice(0, 10)))
+    return Math.max(1, days.size)
+  }, [bills])
+  const averageServiceFeePerDay = Math.max(weeklyPayoutRequirement / 7, totals.fees / billableDayCount)
+  const daysRechargeAmount = Math.ceil(averageServiceFeePerDay * rechargeDays)
+  const payableAmount = rechargeMode === 'days' ? daysRechargeAmount : selectedAmount || 0
   const previewBills = bills.slice(0, 4)
   const mobilePreviewBills = bills.slice(0, 2)
+
+  useEffect(() => {
+    setPaymentDone(false)
+  }, [payableAmount])
+
+  const markPaymentDone = () => {
+    if (!payableAmount || paymentDone) return
+
+    setSellerSession((current) => ({
+      ...current,
+      billing: {
+        ...current.billing,
+        walletBalance: Number(current.billing?.walletBalance || 0) + payableAmount,
+        lastRechargeAmount: payableAmount,
+        lastRechargeDays: rechargeMode === 'days' ? rechargeDays : null,
+        lastRechargeMode: rechargeMode,
+        lastRechargeAt: new Date().toISOString(),
+      },
+    }))
+    setPaymentDone(true)
+  }
 
   const copyUpiId = async () => {
     try {
@@ -157,7 +185,7 @@ export function BillingPage({ sellerSession, theme, onToggleTheme }) {
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <p className="text-[10px] font-black uppercase tracking-[0.08em] text-[#647267]">Avg usage / day</p>
-                        <strong className="mt-1 block text-[22px] font-black">{money(0)}</strong>
+                        <strong className="mt-1 block text-[22px] font-black">{money(averageServiceFeePerDay)}</strong>
                       </div>
                       <span className="grid h-11 w-11 place-items-center rounded-[15px] bg-white text-[#173f2a]">
                         <IndianRupee className="h-5 w-5" />
@@ -172,7 +200,7 @@ export function BillingPage({ sellerSession, theme, onToggleTheme }) {
                     </div>
                     <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
                       {DAY_OPTIONS.map((days) => (
-                        <button className={`tap-lift min-h-10 rounded-[13px] border text-[12px] font-black ${rechargeDays === days ? 'border-[#173f2a] bg-[#173f2a] text-white' : 'border-[#dde5da] bg-white text-[#334039] active:bg-[#edf5ed]'}`} key={days} type="button" onClick={() => setRechargeDays(days)}>
+                        <button className={`tap-lift min-h-10 rounded-[13px] border text-[12px] font-black ${rechargeMode === 'days' && rechargeDays === days ? 'border-[#173f2a] bg-[#173f2a] text-white' : 'border-[#dde5da] bg-white text-[#334039] active:bg-[#edf5ed]'}`} key={days} type="button" onClick={() => { setRechargeMode('days'); setRechargeDays(days) }}>
                           {days}
                         </button>
                       ))}
@@ -189,7 +217,7 @@ export function BillingPage({ sellerSession, theme, onToggleTheme }) {
                     <p className="mb-2 text-[11px] font-black uppercase tracking-[0.06em] text-[#5b7567]">Select amount</p>
                     <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
                       {AMOUNT_OPTIONS.map((amount) => (
-                        <button className={`tap-lift min-h-11 rounded-[13px] border text-[12px] font-black ${selectedAmount === amount ? 'border-[#173f2a] bg-[#edf5ed] text-[#173f2a] shadow-[0_8px_18px_rgba(23,63,42,0.12)]' : 'border-[#dde5da] bg-white text-[#334039] active:bg-[#edf5ed]'}`} key={amount} type="button" onClick={() => setSelectedAmount(amount)}>
+                        <button className={`tap-lift min-h-11 rounded-[13px] border text-[12px] font-black ${rechargeMode === 'amount' && selectedAmount === amount ? 'border-[#173f2a] bg-[#edf5ed] text-[#173f2a] shadow-[0_8px_18px_rgba(23,63,42,0.12)]' : 'border-[#dde5da] bg-white text-[#334039] active:bg-[#edf5ed]'}`} key={amount} type="button" onClick={() => { setRechargeMode('amount'); setSelectedAmount(amount) }}>
                           Rs {amount}
                         </button>
                       ))}
@@ -200,7 +228,7 @@ export function BillingPage({ sellerSession, theme, onToggleTheme }) {
                     <span className="text-[10px] font-black uppercase tracking-[0.08em] text-[#08783c]">Payable amount</span>
                     <div className="mt-1 flex items-end justify-between gap-3">
                       <strong className="text-[26px] font-black leading-none">{payableAmount ? money(payableAmount) : '-'}</strong>
-                      <span className="text-[11px] font-black text-[#08783c]">Wallet recharge</span>
+                      <span className="text-[11px] font-black text-[#08783c]">{rechargeMode === 'days' ? `${rechargeDays} day cover` : 'Wallet recharge'}</span>
                     </div>
                   </div>
 
@@ -210,7 +238,7 @@ export function BillingPage({ sellerSession, theme, onToggleTheme }) {
                   </label>
 
                   <div className="grid gap-2">
-                    <button className={`tap-lift min-h-12 rounded-[15px] text-[12px] font-black ${paymentDone ? 'bg-[#08783c] text-white' : 'border border-[#9ed7b3] bg-[#f0fff5] text-[#08783c]'}`} type="button" onClick={() => setPaymentDone(true)}>
+                    <button className={`tap-lift min-h-12 rounded-[15px] text-[12px] font-black ${paymentDone ? 'bg-[#08783c] text-white' : 'border border-[#9ed7b3] bg-[#f0fff5] text-[#08783c]'}`} type="button" onClick={markPaymentDone} disabled={!payableAmount || paymentDone}>
                       {paymentDone ? 'Transfer marked' : 'Payment transfer done'}
                     </button>
                     <button className={`tap-lift inline-flex min-h-12 items-center justify-center gap-2 rounded-[15px] text-[12px] font-black text-white ${termsAccepted && payableAmount ? 'bg-[#173f2a] active:bg-[#08783c]' : 'bg-[#b7c1ba]'}`} type="button" disabled={!termsAccepted || !payableAmount}>

@@ -54,7 +54,7 @@ export function AppFooter() {
         {firstLinks.map(renderLink)}
         {addLabel && (
           <button
-            className="tap-lift -mt-4 mb-1 grid h-[58px] w-[58px] place-items-center justify-self-center rounded-full bg-[#173f2a] text-white shadow-[0_18px_36px_rgba(23,63,42,0.28),0_1px_0_rgba(255,255,255,0.3)_inset] hover:bg-[#08783c] sm:h-16 sm:w-16 md:-mt-3 md:mb-0 md:h-14 md:w-14"
+            className="seller-footer-add-button tap-lift -mt-4 mb-1 grid aspect-square h-[58px] w-[58px] shrink-0 place-items-center justify-self-center rounded-full bg-[#173f2a] text-white shadow-[0_18px_36px_rgba(23,63,42,0.28),0_1px_0_rgba(255,255,255,0.3)_inset] hover:bg-[#08783c] sm:h-16 sm:w-16 md:-mt-3 md:mb-0 md:h-14 md:w-14"
             type="button"
             aria-label={addLabel}
             title={addLabel}

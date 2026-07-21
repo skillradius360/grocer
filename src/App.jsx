@@ -108,15 +108,6 @@ function App() {
   }, [navigate])
 
   useEffect(() => {
-    window.localStorage.setItem('simplifyliving:theme', theme)
-    document.body.classList.toggle('theme-dark-orange', theme === 'dark')
-
-    return () => {
-      document.body.classList.remove('theme-dark-orange')
-    }
-  }, [theme])
-
-  useEffect(() => {
     if (!hasFooter || !appShellRef.current) return undefined
 
     const updateFooterFrame = () => {
@@ -138,6 +129,15 @@ function App() {
       document.documentElement.style.removeProperty('--seller-footer-width')
     }
   }, [hasFooter, location.pathname])
+
+  useEffect(() => {
+    window.localStorage.setItem('simplifyliving:theme', theme)
+    document.body.classList.toggle('theme-dark-orange', theme === 'dark')
+
+    return () => {
+      document.body.classList.remove('theme-dark-orange')
+    }
+  }, [theme])
 
   const updateField = (field) => (event) => {
     const rawValue = event.target.value
@@ -283,7 +283,7 @@ function App() {
           <Route path="/customers" element={<CustomersPage sellerSession={sellerSession} theme={theme} onToggleTheme={() => setTheme((current) => (current === 'dark' ? 'light' : 'dark'))} />} />
           <Route path="/offers" element={<OffersPage sellerSession={sellerSession} theme={theme} onToggleTheme={() => setTheme((current) => (current === 'dark' ? 'light' : 'dark'))} />} />
           <Route path="/analytics" element={<AnalyticsPage sellerSession={sellerSession} theme={theme} onToggleTheme={() => setTheme((current) => (current === 'dark' ? 'light' : 'dark'))} />} />
-          <Route path="/billing" element={<BillingPage sellerSession={sellerSession} theme={theme} onToggleTheme={() => setTheme((current) => (current === 'dark' ? 'light' : 'dark'))} />} />
+          <Route path="/billing" element={<BillingPage sellerSession={sellerSession} setSellerSession={setSellerSession} theme={theme} onToggleTheme={() => setTheme((current) => (current === 'dark' ? 'light' : 'dark'))} />} />
           <Route path="/settings" element={<SettingsPage sellerSession={sellerSession} setSellerSession={setSellerSession} theme={theme} onToggleTheme={() => setTheme((current) => (current === 'dark' ? 'light' : 'dark'))} />} />
           <Route path="/profile" element={<ProfilePage sellerSession={sellerSession} setSellerSession={setSellerSession} theme={theme} onToggleTheme={() => setTheme((current) => (current === 'dark' ? 'light' : 'dark'))} />} />
           <Route path="*" element={<Navigate to="/auth" replace />} />

@@ -635,6 +635,16 @@
     height: 54px !important;
   }
 
+  .seller-footer-add-button {
+    width: 58px !important;
+    min-width: 58px !important;
+    max-width: 58px !important;
+    height: 58px !important;
+    min-height: 58px !important;
+    max-height: 58px !important;
+    border-radius: 9999px !important;
+  }
+
   [class*="h-14"] {
     height: 3.125rem !important;
   }

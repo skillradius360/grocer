@@ -48,6 +48,18 @@ function tabForStatus(status) {
   return status === 'Completed' ? 'History' : status
 }
 
+function whatsappUrl(phone) {
+  const digits = digitsOnly(phone || '', 15)
+  const phoneWithCountryCode = digits.length === 10 ? `91${digits}` : digits
+  return `https://wa.me/${phoneWithCountryCode}`
+}
+
+function openWhatsApp(phone) {
+  const digits = digitsOnly(phone || '', 15)
+  if (!digits) return
+  window.open(whatsappUrl(phone), '_blank', 'noopener,noreferrer')
+}
+
 export function OrdersPage({ sellerSession, theme, onToggleTheme }) {
   const [orders, setOrders] = useState([])
   const [categories, setCategories] = useState([])
@@ -60,6 +72,29 @@ export function OrdersPage({ sellerSession, theme, onToggleTheme }) {
   const [formErrors, setFormErrors] = useState({})
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (!formOpen && !selectedOrder) return undefined
+
+    const scrollY = window.scrollY
+    const previousOverflow = document.body.style.overflow
+    const previousBodyPosition = document.body.style.position
+    const previousBodyWidth = document.body.style.width
+    const previousBodyTop = document.body.style.top
+
+    document.body.style.overflow = 'hidden'
+    document.body.style.position = 'fixed'
+    document.body.style.width = '100%'
+    document.body.style.top = `-${scrollY}px`
+
+    return () => {
+      document.body.style.overflow = previousOverflow
+      document.body.style.position = previousBodyPosition
+      document.body.style.width = previousBodyWidth
+      document.body.style.top = previousBodyTop
+      window.scrollTo(0, scrollY)
+    }
+  }, [formOpen, selectedOrder])
 
   useEffect(() => {
     let active = true
@@ -291,7 +326,7 @@ function OrderCard({ order, onOpen }) {
         <span onClick={(event) => event.stopPropagation()}>
           <IconButton icon="phone" label="Call" />
         </span>
-        <button className="tap-lift inline-flex min-h-11 items-center justify-center gap-2 rounded-[14px] border border-[#9ed7b3] bg-[#f0fff5] px-3 text-[12px] font-black text-[#08783c]" type="button" onClick={(event) => event.stopPropagation()}>
+        <button className="tap-lift inline-flex min-h-11 items-center justify-center gap-2 rounded-[14px] border border-[#9ed7b3] bg-[#f0fff5] px-3 text-[12px] font-black text-[#08783c]" type="button" onClick={(event) => { event.stopPropagation(); openWhatsApp(order.buyerPhone) }}>
           <MessageCircle className="h-4 w-4" />
           WhatsApp
         </button>
@@ -315,9 +350,9 @@ function OrderDetail({ order, onClose, onConfirm, onReady, onPayment, onComplete
     Completed: 'Order successfully completed',
   }[order.status]
 
-  return (
-    <div className="fixed inset-0 z-30 grid place-items-end bg-[#11181466] sm:place-items-center">
-      <aside className="max-h-[94svh] w-full overflow-y-auto rounded-t-[24px] border border-[#dde5da] bg-[#fbfcf8] shadow-[0_-20px_60px_rgba(17,24,20,0.24)] sm:max-w-[520px] sm:rounded-[24px]">
+  return createPortal(
+    <div className="fixed inset-0 z-30 grid h-dvh place-items-center overflow-hidden bg-[#11181466] p-4 sm:p-6">
+      <aside className="grid max-h-[min(74dvh,620px)] w-full max-w-[660px] grid-rows-[auto_1fr_auto] overflow-hidden rounded-[22px] border border-[#dde5da] bg-[#fbfcf8] shadow-[0_24px_60px_rgba(17,24,20,0.24)]">
         <header className="sticky top-0 z-10 border-b border-[#dde5da] bg-[#fbfcf8]/95 p-4 backdrop-blur">
           <div className="flex items-start justify-between gap-3">
             <div>
@@ -334,7 +369,7 @@ function OrderDetail({ order, onClose, onConfirm, onReady, onPayment, onComplete
           </div>
         </header>
 
-        <div className="grid gap-3 p-4 pb-28">
+        <div className="grid min-h-0 gap-3 overflow-y-auto overscroll-contain p-3.5 sm:p-4">
           <Panel className="p-4">
             <SectionTitle title="Current stage" />
             <div className="flex items-center justify-between gap-3">
@@ -389,7 +424,7 @@ function OrderDetail({ order, onClose, onConfirm, onReady, onPayment, onComplete
             </div>
             <div className="mt-3 grid grid-cols-3 gap-2">
               <IconButton icon="phone" label="Call" />
-              <button className="tap-lift inline-flex min-h-11 items-center justify-center gap-2 rounded-[14px] border border-[#9ed7b3] bg-[#f0fff5] px-3 text-[12px] font-black text-[#08783c]" type="button">
+              <button className="tap-lift inline-flex min-h-11 items-center justify-center gap-2 rounded-[14px] border border-[#9ed7b3] bg-[#f0fff5] px-3 text-[12px] font-black text-[#08783c]" type="button" onClick={() => openWhatsApp(order.buyerPhone)}>
                 <MessageCircle className="h-4 w-4" />
                 WhatsApp
               </button>
@@ -430,7 +465,7 @@ function OrderDetail({ order, onClose, onConfirm, onReady, onPayment, onComplete
           </Panel>
         </div>
 
-        <footer className="sticky bottom-0 grid gap-2 border-t border-[#dde5da] bg-[#fbfcf8]/95 p-4 backdrop-blur">
+        <footer className="grid gap-2 border-t border-[#dde5da] bg-[#fbfcf8]/95 p-3.5 pb-[calc(0.875rem+env(safe-area-inset-bottom))] backdrop-blur sm:p-4">
           {order.status === 'New' && <button className="tap-lift min-h-12 rounded-[16px] bg-[#173f2a] text-[14px] font-black text-white active:bg-[#08783c]" type="button" onClick={onConfirm}>Confirm and start preparing</button>}
           {order.status === 'Preparing' && <button className="tap-lift min-h-12 rounded-[16px] bg-[#173f2a] text-[14px] font-black text-white active:bg-[#08783c]" type="button" onClick={onReady}>Mark ready for pickup</button>}
           {order.status === 'Ready' && (
@@ -448,7 +483,8 @@ function OrderDetail({ order, onClose, onConfirm, onReady, onPayment, onComplete
           {order.status === 'Completed' && <div className="rounded-[16px] border border-[#9ed7b3] bg-[#f0fff5] p-3 text-center text-[13px] font-black text-[#08783c]">Order successfully completed</div>}
         </footer>
       </aside>
-    </div>
+    </div>,
+    document.body,
   )
 }
 
@@ -518,8 +554,8 @@ function BuyerOrderForm({ activeOffers, categories, errors, form, inventory, onC
   }
 
   return createPortal(
-    <div className="fixed inset-0 z-30 grid place-items-center overflow-x-hidden overflow-y-auto bg-[#11181466] p-3 sm:p-6">
-      <form className="grid max-h-[min(74dvh,620px)] w-full min-w-0 max-w-[560px] grid-rows-[auto_1fr_auto] overflow-hidden rounded-[22px] border border-[#dde5da] bg-[#fbfcf8] shadow-[0_24px_60px_rgba(17,24,20,0.24)]" onSubmit={onSubmit}>
+    <div className="fixed inset-0 z-30 grid h-dvh place-items-center overflow-hidden bg-[#11181466] p-4 sm:p-6">
+      <form className="grid max-h-[min(74dvh,620px)] w-full min-w-0 max-w-[660px] grid-rows-[auto_1fr_auto] overflow-hidden rounded-[22px] border border-[#dde5da] bg-[#fbfcf8] shadow-[0_24px_60px_rgba(17,24,20,0.24)]" onSubmit={onSubmit}>
         <header className="flex items-start justify-between gap-3 border-b border-[#dde5da] bg-[#fbfcf8]/95 p-3.5 backdrop-blur sm:p-4">
           <div>
             <p className="text-[10px] font-black uppercase tracking-[0.08em] text-[#5b7567]">Buyer order form</p>
@@ -603,7 +639,7 @@ function BuyerOrderForm({ activeOffers, categories, errors, form, inventory, onC
           )}
         </div>
 
-        <footer className="grid min-w-0 grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] gap-2 border-t border-[#dde5da] bg-[#fbfcf8]/95 p-3.5 backdrop-blur sm:p-4">
+        <footer className="grid min-w-0 grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] gap-2 border-t border-[#dde5da] bg-[#fbfcf8]/95 p-3.5 pb-[calc(0.875rem+env(safe-area-inset-bottom))] backdrop-blur sm:p-4">
           <button className="tap-lift rounded-[16px] border border-[#dde5da] bg-white py-3 text-[13px] font-black active:bg-[#f8faf7]" type="button" onClick={onClose}>Cancel</button>
           <button className={`tap-lift rounded-[16px] py-3 text-[13px] font-black text-white ${selectedItem?.quantity > 0 && selectedItem?.sellerStatus === 'Active' ? 'bg-[#173f2a] active:bg-[#08783c]' : 'bg-[#c9d1ca]'}`} type="submit" disabled={!selectedItem || selectedItem.quantity <= 0 || selectedItem.sellerStatus !== 'Active'}>Create order</button>
         </footer>
